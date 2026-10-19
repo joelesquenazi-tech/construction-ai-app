@@ -1,0 +1,10 @@
+(()=>{'use strict';
+const input=document.getElementById('drawingImport'),status=document.getElementById('drawingStatus'),img=document.getElementById('sheet');
+const DB='construction-ai-private-drawings',STORE='images';let objectUrl;
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function transact(mode,operation){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,mode);const req=operation(tx.objectStore(STORE));req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close()})}
+async function show(blob){if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(blob);img.onload=()=>{if(img.naturalWidth!==4480||img.naturalHeight!==3051){status.textContent=`Image loaded (${img.naturalWidth}×${img.naturalHeight}), but OCR marker positions expect 4480×3051. Do not rely on marker alignment.`}else{status.textContent='A102 drawing loaded privately on this device. OCR findings remain unverified.'}};img.src=objectUrl;img.hidden=false}
+input.addEventListener('change',async()=>{const f=input.files?.[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)){status.textContent='Choose a JPG or PNG image.';return}try{await transact('readwrite',s=>s.put(f,'A102'));await show(f)}catch(e){status.textContent='Could not save drawing locally: '+e.message}});
+(async()=>{try{const blob=await transact('readonly',s=>s.get('A102'));if(blob)await show(blob)}catch(e){status.textContent='Local drawing storage unavailable: '+e.message}})();
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Offline installation unavailable:',e))}
+})();
