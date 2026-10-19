@@ -2,3 +2,8 @@
 
 /* Offline private drawing import */
 #drawingImport{display:block;max-width:100%;margin-top:8px}#drawingStatus{display:block;margin-top:8px;color:#b3c2d4}#sheet[hidden]{display:none}.drawing-stage{background:repeating-linear-gradient(45deg,#172638,#172638 20px,#1b2b3d 20px,#1b2b3d 40px)}
+
+/* Batch 1.2: imported images occupy the original OCR pixel coordinate canvas. */
+#sheet{width:4480px!important;height:3051px!important;max-width:none!important;object-fit:fill!important;}
+#updateNotice{margin:10px 24px;padding:12px;border:1px solid #47799c;border-radius:10px;background:#172b40;color:#e4f1ff;}
+#updateNotice[hidden]{display:none!important;}
