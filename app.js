@@ -26,5 +26,13 @@ const form=$('recordForm');for(const [k,v] of Object.entries(state.records||{}))
 $('export').onclick=()=>{const blob=new Blob([JSON.stringify({schema:'construction-ai-batch1',exportedAt:new Date().toISOString(),drawing:'A102',...state},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='construction-ai-A102-review-backup.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('import').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(obj.schema!=='construction-ai-batch1'||!Array.isArray(obj.findings)||obj.findings.some(f=>typeof f.id!=='string'||typeof f.x!=='number'||typeof f.y!=='number'||!['pending','confirmed','rejected'].includes(f.status)))throw Error('Invalid backup format');if(!confirm('Replace reviews and records on this device with this backup?'))return;state={findings:obj.findings,records:obj.records&&typeof obj.records==='object'?obj.records:{}};save();location.reload()}catch(err){alert('Import failed: '+err.message)}};
 $('resetData').onclick=()=>{if(confirm('Erase all locally saved reviews and records for this prototype?')){localStorage.removeItem(KEY);location.reload()}};
+// Compare editable fields with persisted values; never write or migrate storage here.
+window.constructionAIHasUnsavedEdits=()=>{
+ let saved;try{saved=JSON.parse(localStorage.getItem(KEY))||initial()}catch{return true}
+ if(JSON.stringify(state.findings)!==JSON.stringify(saved.findings))return true;
+ const f=state.findings.find(x=>x.id===selected);
+ if(f&&$('correction')&&($('correction').value!==(f.correction||'')||$('reviewNote').value!==(f.note||'')))return true;
+ return [...new FormData(form)].some(([key,value])=>value!==String(saved.records?.[key]??''));
+};
 render();requestAnimationFrame(fit);window.addEventListener('resize',()=>{if(document.getElementById('drawings').classList.contains('active'))fit()});
 })();

@@ -1,9 +1,9 @@
 // Only app-shell assets belong in Cache Storage. Private drawings remain in IndexedDB.
 const CACHE_PREFIX = 'construction-ai-shell-';
-const CACHE = `${CACHE_PREFIX}v1-2-1`;
+const CACHE = `${CACHE_PREFIX}v1-2-2`;
 const FILES = [
   './', './index.html', './styles.css', './app.js', './data.js', './pwa.js',
-  './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
+  './settings.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -37,4 +37,9 @@ self.addEventListener('fetch', event => {
     }
     return fetch(event.request);
   }));
+});
+
+// A user-initiated refresh can activate an already installed update.
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });

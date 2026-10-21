@@ -7,3 +7,11 @@
 #sheet{width:4480px!important;height:3051px!important;max-width:none!important;object-fit:fill!important;}
 #updateNotice{margin:10px 24px;padding:12px;border:1px solid #47799c;border-radius:10px;background:#172b40;color:#e4f1ff;}
 #updateNotice[hidden]{display:none!important;}
+
+/* Settings remains usable with touch, keyboard, and narrow screens. */
+#openSettings{font-size:24px;min-width:44px;min-height:44px;padding:4px 10px}
+#settingsPanel{color:#e4f1ff;background:#172b40;border:1px solid #47799c;border-radius:12px;padding:24px;width:min(440px,calc(100vw - 48px));max-height:80vh;overflow:auto}
+#settingsPanel::backdrop{background:rgba(0,0,0,.65)}
+.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.settings-heading h2{margin:0}#closeSettings{min-width:44px;min-height:44px}
+#refreshStatus{min-height:1.5em}#refreshStatus[data-error="true"]{color:#ffb6b6}
