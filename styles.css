@@ -15,3 +15,14 @@
 .settings-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .settings-heading h2{margin:0}#closeSettings{min-width:44px;min-height:44px}
 #refreshStatus{min-height:1.5em}#refreshStatus[data-error="true"]{color:#ffb6b6}
+
+/* Batch 1.3 independent settings and layers controls */
+.floating-panel{position:absolute;z-index:50;right:14px;top:75px;width:min(340px,calc(100vw - 28px));background:#172b40;color:#e4f1ff;border:1px solid #47799c;border-radius:12px;padding:16px;box-shadow:0 12px 35px #0009}
+.floating-panel[hidden]{display:none!important}
+.floating-panel h2{font-size:17px;margin:0 0 12px}
+.floating-panel label{display:flex;align-items:center;gap:10px;padding:9px 0;min-height:44px}
+.floating-panel input{width:20px;height:20px}
+.floating-panel p{font-size:12px;color:#b9cadc;line-height:1.5}
+#settingsRefresh{width:100%;min-height:44px;background:#176bb5}
+#settingsToggle,#layersToggle{min-height:44px}
+@media(max-width:550px){.floating-panel{top:68px}.header-actions{gap:5px}#layersToggle{font-size:12px;padding:8px}#settingsToggle{padding:8px 12px}}
