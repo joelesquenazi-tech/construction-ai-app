@@ -40,3 +40,13 @@
 .sheet-item small{font-size:12px;color:#b4c6d8}.sheet-item.active{background:#205d90;border-color:#65a3d4}
 #sheet{width:100%!important;height:100%!important;max-width:none!important}
 @media(max-width:720px){.library-layout{grid-template-columns:1fr}.library-header{flex-wrap:wrap}.library-header select{max-width:100%}}
+
+/* Batch 1.5 construction knowledge */
+#knowledgeForm textarea,#knowledgeForm input,#knowledgeForm select,#knowledgeSearch,#knowledgeFilter{display:block;width:100%;max-width:100%;min-height:44px;background:#0c1727;color:#eef5ff;border:1px solid #38506d;border-radius:9px;padding:10px;margin-top:6px}
+#knowledgeForm input[type=hidden]{display:none}
+.knowledge-item{border:1px solid #344962;background:#111d2e;border-radius:10px;padding:12px;margin:12px 0;overflow-wrap:anywhere}
+.knowledge-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.knowledge-item p{white-space:pre-wrap}.knowledge-item small{color:#aabed1}
+.knowledge-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.knowledge-actions button{min-height:44px}
+.knowledge-history{background:#0b1423;border:1px solid #33445c;border-radius:8px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto;font-size:12px}
