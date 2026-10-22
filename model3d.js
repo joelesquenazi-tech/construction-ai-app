@@ -51,32 +51,41 @@ const rulerLens=$('scaleRulerMagnifier'),rulerLensCanvas=$('scaleRulerMagnifierC
 function hideRulerLens(){rulerLens.hidden=true}
 function showRulerLens(p,e,raw=p){
  if(!rulerSize||!rulerImage.complete||!rulerImage.naturalWidth||!rulerLensCtx)return;
- const zoom=4,diameter=180,span=diameter/zoom;
+ const diameter=180,zoom=4;
+ const rect=rulerImage.getBoundingClientRect();
+ if(rect.width<=0||rect.height<=0)return;
+ // Zoom means 4x the *visible drawing*, not 4x original image pixels.
+ // This preserves the finger-to-drawing correspondence at any image scale.
+ const sourcePerCssX=rulerSize.width/rect.width;
+ const sourcePerCssY=rulerSize.height/rect.height;
+ const spanX=diameter*sourcePerCssX/zoom;
+ const spanY=diameter*sourcePerCssY/zoom;
+ const left=raw.x-spanX/2,top=raw.y-spanY/2;
  const lensX=Math.max(96,Math.min(window.innerWidth-96,e.clientX));
- const above=e.clientY>210;
- const lensY=above?e.clientY-18:Math.min(window.innerHeight-8,e.clientY+202);
+ const lensY=e.clientY>215?e.clientY-18:Math.min(window.innerHeight-8,e.clientY+205);
  rulerLens.style.left=lensX+'px';rulerLens.style.top=lensY+'px';
  rulerLens.style.transform='translate(-50%,-100%)';
- const ctx=rulerLensCtx;ctx.clearRect(0,0,diameter,diameter);
- ctx.fillStyle='#fff';ctx.fillRect(0,0,diameter,diameter);
- // Sample directly from the decoded original image. Large source canvases may
- // silently fail on iPad Safari; never depend on the snapping pixel buffer.
- const x0=Math.max(0,raw.x-span/2),y0=Math.max(0,raw.y-span/2);
- const x1=Math.min(rulerSize.width,raw.x+span/2),y1=Math.min(rulerSize.height,raw.y+span/2);
- const w=x1-x0,h=y1-y0;
- if(w>0&&h>0){
+ const ctx=rulerLensCtx;
+ ctx.clearRect(0,0,diameter,diameter);ctx.fillStyle='#fff';ctx.fillRect(0,0,diameter,diameter);
+ const x0=Math.max(0,left),y0=Math.max(0,top);
+ const x1=Math.min(rulerSize.width,left+spanX),y1=Math.min(rulerSize.height,top+spanY);
+ if(x1>x0&&y1>y0){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  const dx=(x0-(raw.x-span/2))*zoom,dy=(y0-(raw.y-span/2))*zoom;
-  ctx.drawImage(rulerImage,x0,y0,w,h,dx,dy,w*zoom,h*zoom);
+  ctx.drawImage(rulerImage,x0,y0,x1-x0,y1-y0,
+   (x0-left)*diameter/spanX,(y0-top)*diameter/spanY,
+   (x1-x0)*diameter/spanX,(y1-y0)*diameter/spanY);
  }
+ // Crosshair always corresponds to the image pixel directly under the finger.
  ctx.strokeStyle='#e78200';ctx.lineWidth=2;
- ctx.beginPath();ctx.moveTo(90,66);ctx.lineTo(90,114);ctx.moveTo(66,90);ctx.lineTo(114,90);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(90,64);ctx.lineTo(90,116);ctx.moveTo(64,90);ctx.lineTo(116,90);ctx.stroke();
  ctx.beginPath();ctx.arc(90,90,5,0,Math.PI*2);ctx.stroke();
- // Orange crosshair = actual finger location; blue target = saved/snapped endpoint.
- const tx=90+(p.x-raw.x)*zoom,ty=90+(p.y-raw.y)*zoom;
- ctx.strokeStyle='#087ef5';ctx.fillStyle='#087ef5';ctx.lineWidth=2.5;
- ctx.beginPath();ctx.arc(tx,ty,7,0,Math.PI*2);ctx.stroke();
- ctx.beginPath();ctx.arc(tx,ty,2,0,Math.PI*2);ctx.fill();
+ // Blue ring identifies the snapped/placed endpoint if different from the finger.
+ const tx=90+(p.x-raw.x)*diameter/spanX,ty=90+(p.y-raw.y)*diameter/spanY;
+ if(Number.isFinite(tx)&&Number.isFinite(ty)){
+  ctx.strokeStyle='#087ef5';ctx.fillStyle='#087ef5';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(tx,ty,7,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(tx,ty,2,0,Math.PI*2);ctx.fill();
+ }
  rulerLens.hidden=false;
 }
 function rulerKnownDistance(){
