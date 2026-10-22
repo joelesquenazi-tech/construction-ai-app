@@ -15,7 +15,33 @@ apply();
 $('settingsRefresh').addEventListener('click',async()=>{
 const button=$('settingsRefresh'),status=$('refreshStatus');button.disabled=true;status.textContent='Checking for the latest app version…';
 try{
-if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.getRegistration();if(reg){await reg.update();}}
+if('serviceWorker' in navigator){
+ const reg=await navigator.serviceWorker.getRegistration();
+ if(reg){
+  const previous=navigator.serviceWorker.controller;
+  await reg.update();
+  const candidate=reg.installing||reg.waiting;
+  if(candidate&&candidate.state!=='activated'){
+   status.textContent='Installing update before refreshing…';
+   if(candidate.state==='installed')candidate.postMessage({type:'SKIP_WAITING'});
+   await Promise.race([
+    new Promise(resolve=>{
+     if(candidate.state==='activated')return resolve();
+     const done=()=>{if(candidate.state==='activated'||candidate.state==='redundant'){candidate.removeEventListener('statechange',done);resolve()}};
+     candidate.addEventListener('statechange',done);
+    }),
+    new Promise(resolve=>setTimeout(resolve,12000))
+   ]);
+  }
+  if(previous&&navigator.serviceWorker.controller===previous&&reg.waiting){
+   reg.waiting.postMessage({type:'SKIP_WAITING'});
+   await Promise.race([
+    new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true})),
+    new Promise(resolve=>setTimeout(resolve,5000))
+   ]);
+  }
+ }
+}
 status.textContent='Reloading app. Saved local data will be retained.';
 window.location.reload();
 }catch(err){status.textContent='Could not check for updates: '+err.message;button.disabled=false;}
