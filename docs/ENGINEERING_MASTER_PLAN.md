@@ -369,3 +369,12 @@ Define a versioned, dependency-free feature catalog and JSON instance schema wit
 4. Geometric snap candidates, magnifier nudge/accept UX and iPad Safari physical testing.
 5. Acceptance gate: automatic setup succeeds on representative real room with floor and elevations, independent scale agreement, source-linked registration, explicit tolerance and zero mandatory manual clicks; uncertainty triggers focused review. No automatic-success claim before this gate.
 
+
+
+## Progress log — 2026-10-22 — Automatic scale discovery, first raster ingestion slice
+
+- Engine PR [#6](https://github.com/joelesquenazi-tech/Construction-ai/pull/6) implements a **local, conservative raster scale candidate pipeline** (`engine/scale_discovery.py`) for JPG/PNG/TIFF, plus synthetic unit tests and a generated-image smoke test. It uses OCR text bounding boxes, horizontal/vertical straight pixel runs, perpendicular witness-line tests, ambiguity/duplicate rejection, and the existing scale estimator. No project drawings are committed for tests.
+- The core scale estimator now checks that supporting observations are **independent** and from the same source sheet, revision and page.
+- **Implemented (engine only):** automatically propose source-linked image pixel endpoints for supported OCR labels and straight witnessed dimensions; estimate **provisional** scale if two independent observations agree. Fails to `needs_review` on insufficient or conflicting matches. Tests cover a synthetic 19′-0″ / 14′-8″ pair.
+- **Not implemented:** robust real-drawing acceptance, reliable all-orientation/PDF dimension recognition, sheet-type classification (AS-1), automatic verified scale approval (remaining AS-2), plan/elevation cross-view registration (AS-3), and frontend upload-flow integration.
+- **Next acceptance work:** evaluate false match rates and endpoint error on permissioned local drawings; support PDF vectors, broken/skewed witness lines and dimension callouts; propagate confidence/evidence to SITE RESOLV3D without changing existing manual calibration until proved.
