@@ -1,0 +1,14 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {partition}=require('../wall-geometry.js');
+const wall=(openings=[])=>({id:'W1',bounds:[0,-.1,0,4,.1,3],length:4,height:3,horizontal:true,direction:1,openings});
+const door={along_m:1,width_m:.9,sill_m:0,height_m:2.1};
+const window={along_m:2.5,width_m:1,sill_m:1,height_m:1};
+const volume=solids=>solids.reduce((n,[a,b,c,d,e,f])=>n+(d-a)*(e-b)*(f-c),0);
+test('solid wall remains a cuboid',()=>{assert.deepEqual(partition(wall()),[[0,-.1,0,4,.1,3]])});
+test('door opening removes exact volume',()=>{const solids=partition(wall([door]));assert.ok(Math.abs(volume(solids)-(4*.2*3-.9*.2*2.1))<1e-9)});
+test('window opening removes exact volume',()=>{const solids=partition(wall([window]));assert.ok(Math.abs(volume(solids)-(4*.2*3-1*.2*1))<1e-9)});
+test('multiple openings remove exact volume',()=>{const solids=partition(wall([door,window]));assert.ok(Math.abs(volume(solids)-(4*.2*3-.9*.2*2.1-.2))<1e-9)});
+test('overlap rejected',()=>assert.throws(()=>partition(wall([door,{along_m:1.2,width_m:.8,sill_m:1,height_m:1}])),/Overlapping/));
+test('out of bounds rejected',()=>assert.throws(()=>partition(wall([{along_m:3.8,width_m:1,sill_m:0,height_m:2}])),/outside wall/));
+test('reversed direction supported',()=>{const w={...wall([door]),direction:-1};assert.ok(partition(w).length>0)});
+test('vertical wall supported',()=>{const w={...wall([door]),horizontal:false,bounds:[-.1,0,0,.1,4,3]};assert.ok(partition(w).length>0)});

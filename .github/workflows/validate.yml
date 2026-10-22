@@ -16,3 +16,5 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           for file in *.js; do node --check "$file"; done
+      - name: Wall geometry unit tests
+        run: node --test tests/wall-geometry.test.cjs
