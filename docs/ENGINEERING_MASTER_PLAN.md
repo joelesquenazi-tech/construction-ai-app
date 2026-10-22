@@ -17,6 +17,7 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 
 ## Development stages and exit gates
 ### Stage 0 — Baseline and test corpus
+- **Planned feature-checklist fixtures:** include documented/missed/partial coves, tray ceilings, soffits, ceiling and base reveals, duplicate instances, multiple profiles, source revisions, and expected host-component changes. Ground truth must cover feature presence, provenance, geometry, and negative/unknown cases.
 - Audit actual app behavior and identify placeholders vs functioning pipeline.
 - Choose one permitted room with plan, elevations, and ideally sections; confirm drawing revisions.
 - Produce ground-truth table of walls, openings, ceiling elevations, and key dimensions, independently measured/confirmed.
@@ -24,6 +25,8 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 - Exit: repeatable input corpus, ground truth, and automated tests exist.
 
 ### Stage 1 — Drawing ingestion and coordinate system
+- **Planned:** retain page/view/crop coordinates for both location/extent annotations ("It goes here") and explanatory detail/profile annotations ("This explains it"), independently of zoom and screen size. Preserve source identity/revision and allow multiple segments/sources per feature.
+- **Automatic-first remains mandatory:** recognize drawing scale from documented dimensions/graphic scales with independent checks; manual calibration is exception-only.
 - Preserve original files; page IDs, project/room, revision, units, orientation, metadata, source provenance.
 - Render PDFs/raster consistently at known resolution; support zoom and pan with coordinate transforms.
 - Calibrate by graphic scale or known dimension; cross-check a second independent measurement.
@@ -31,6 +34,8 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 - Exit: measurements are repeatable and within a tolerance defined from the source quality; no silent scaling errors.
 
 ### Stage 2 — 2D architectural geometry
+- **Planned:** add room-scoped feature catalog and multiple feature instances, separate presence/origin/review/geometry states, typed dimensions with imperial fractions and datums, stable host/annotation/source IDs, and an Add/Edit checklist interface.
+- **Planned:** automatically extract wall linework and propose wall geometry; manual tracing is a correction/fallback, not routine setup. Add mark-edge/polyline/area tools and bidirectional checklist↔drawing selection.
 - Extract vector paths when available; otherwise process raster linework.
 - Propose wall centerlines/faces, intersections, door/window openings, arcs and symbols.
 - Associate dimensions and text with geometry; editable correction tools.
@@ -38,33 +43,40 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 - Exit: one room's footprint and openings match independently confirmed ground truth.
 
 ### Stage 3 — Multi-view reconciliation
+- **Planned:** link RCP runs/room edges to elevation/section/detail profiles via host, room coordinates, view orientation and dimension evidence; never infer location from proximity on a sheet. Associate cove/reveal/soffit parameters with independent per-value evidence, missing information and conflicts.
 - Align plan with elevations and sections using gridlines, walls, opening IDs, datum and known dimensions.
 - Infer vertical heights and opening positions only with evidence; expose conflicts and missing data.
 - Use consistent coordinate conventions, levels and units.
 - Exit: reconciled, source-backed 3D room specification with explicit unresolved issues.
 
 ### Stage 4 — Deterministic 3D reconstruction
+- **Planned:** parameterized, editable, host-aware geometry for coves, pop-up/tray ceilings, soffits, ceiling/top-of-wall/bottom-of-wall reveals, including run/extent, profile, terminations and finish thickness. Preview affected neighbors; Apply updates actual ceiling/wall assemblies, not just labels; support Undo.
 - Generate walls with actual thickness/height, openings, slabs/ceilings, not a conceptual cube.
 - Keep geometry separate from visualization; support regenerate after corrections.
 - Store editable semantic model with persistent element IDs and source links.
 - Exit: measurable 3D room reproduces agreed ground truth within documented tolerances.
 
 ### Stage 5 — Verification and correction loop
+- **Planned:** per-room checklist with presence (present/absent/unresolved/N/A), origin (detected/manual), review (unreviewed/confirmed/needs review), and geometry (not modeled/preliminary/evidence-verified) as independent fields. "Not found" stays unresolved; reviewed-with-exceptions is not verified completion.
+- **Planned:** persistent additions, per-field provenance, corrections/undo history, source-linked model edits, deduplication and reconciliation after reprocessing; revised sheets trigger impact review without overwriting accepted corrections. Check reveal continuity, ceiling datums, terminations, overlaps and relevant MEP/structure.
 - Project model edges and dimensions back onto each source view.
 - Check dimensions, topology, intersections, clearance, cross-sheet consistency and revision mismatches.
 - Explain discrepancies and let superintendent accept/reject/edit; keep audit history.
 - Exit: every modeled element has source support or an explicitly acknowledged assumption; reproducible test report passes.
 
 ### Stage 6 — Architectural detail
+- **Planned:** broaden the room-by-room feature catalog to all ceiling, wall-top/bottom/surface, door/opening, floor, millwork/stone, and detail conditions defined in the Feature Checklist Integration Contract below; preserve multiple instances and different profiles.
 - Add wall assemblies, reveals, baseboards, millwork, finish layers, specialty conditions, and existing conditions.
 - Exit: construction details reconcile across views and preserve tolerances.
 
 ### Stage 7 — MEP coordination
+- **Planned:** extend checklist to diffusers, grilles, ducts, lights, sprinklers, devices, equipment/access, columns and beams; validate feature/assembly interferences, clearance and access without claiming buildability from geometry alone.
 - Add ducts, pipes, electrical, sprinklers and clearance envelopes with source attribution.
 - Check interference and access, distinguish true clashes from incomplete information.
 - Exit: reviewed test conflicts have defensible geometry and clear provenance.
 
 ### Stage 8 — Provider-independent deployment
+- **Planned:** prove local/offline checklist, annotations, source linking, inference for supported features, parameterized application, undo, persistence and reprocessing. No ChatGPT or mandatory hosted inference; saved project corrections do not become generalized model training without separate consent and controls.
 - Package the geometry engine and self-hosted inference for local or operator-controlled server deployment; benchmark on target devices.
 - Web/iOS packaging is secondary to engine correctness. Allow optional desktop processing without making network essential.
 - Exit: the critical workflow completes without third-party hosted AI; documented offline features pass airplane-mode tests.
@@ -232,3 +244,94 @@ Upload floor plan and elevations (plus sections/details when available) → extr
 - This module does not yet extract drawing relationships, decide which component a dimension controls, or change actual meshes. Next: automatic witness-line association, multi-view/datum mapping, typed relationship graph, and deterministic component mesh updates with source reprojection.
 - Engine: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/semantic_constraints.py
 - Contract: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/docs/SEMANTIC_DIMENSION_BINDING.md
+
+## Feature Checklist Integration Contract — approved requirements, PLANNED (2026-10-22)
+This contract elaborates the existing Stages 0–8; it is **not a parallel roadmap**. No feature in this contract is implemented or tested merely by being specified here.
+
+### Product behavior and catalog
+Each room's checklist is a **search guide and verification aid**, never proof that an undocumented feature is absent. Search automatically; the superintendent may add a missed feature by identifying its drawing location and optional explanatory detail, without manually building its 3D geometry. Support many instances of the same feature, each independently hosted, dimensioned, sourced and reviewed.
+
+| Category | Features to search, model and verify (planned) |
+| --- | --- |
+| Ceilings | Main elevation, height changes, pop-up/tray, soffit, bulkhead, cove, perimeter recess, ceiling reveal, slope, access panel |
+| Top of walls | Ceiling connection, shadow reveal, recessed track, crown, cove, stop-below-ceiling, finish wrapping onto ceiling |
+| Bottom of walls | Flush/recessed/projecting baseboard, base reveal, shadow gap, finish-to-floor, recessed lighting, door/millwork transitions |
+| Wall surfaces | Finish thickness, wainscot, panels, niche, pilaster, projection, recess, horizontal/vertical reveals |
+| Doors/openings | Opening dimensions, frame depth, casing, flush/concealed frame, head/jamb reveals, pocket, threshold, finish alignment |
+| Floors | Finish thickness, elevation change, slope, transition, border, recess, drain, threshold relationship |
+| Millwork/stone | Dimensions/depths, filler, scribe, toe kick, counter, backsplash, overhang, integrated lighting, equipment clearance |
+| MEP/structure | Duct, diffuser, grille, light, sprinkler, device, access, column, beam, interference with finished assemblies |
+
+**First implementation family:** coves; pop-up/tray ceilings; soffits; ceiling reveals; top-of-wall reveals; bottom-of-wall reveals. Extend the same schema and tools to the remaining catalog.
+
+### Checklist record and interface
+Every feature-type row displays name, instance count, and **four independent status axes**:
+- Presence: `present | absent | unresolved | not_applicable`.
+- Origin (per instance): `system_detected | manually_added`.
+- Review: `unreviewed | confirmed | needs_review`.
+- Geometry: `not_modeled | preliminary | verified_against_available_evidence`.
+
+Do not conflate detection, review and verification. A missing detector result does not mean absent. Reviewed rooms may contain unresolved items, but such items remain visible and block a fully verified designation.
+
+Provide context-sensitive **Add manually, Locate on drawing, Link detail, Edit, Preview, Apply, Undo** actions, with explicit unit, datum, per-value source, assumptions, conflicts and missing information. A row may hold many independently editable instances; not one global yes/no.
+
+**Cove-specific fields:** room, host ceiling surface/edge, run/extent, width, depth, drop, profile, main/lower ceiling elevations, lip elevation, corners, end conditions, material/finish thickness, lighting/access if documented, RCP/elevation/section/detail references, unresolved values.
+
+**Reveal-specific fields:** host surface/junction, top/bottom/ceiling/vertical position, opening width/height, recess depth, offset/elevation and datum, backing/finish, extent, corners/terminations, continuity at doors/millwork, supporting sources. A `½"` label alone cannot establish location, extent, opening and recess depth. Accept typed architectural imperial fractions; convert to consistent internal metres without discarding displayed units.
+
+### Annotation purposes and navigation
+Two distinct annotation roles: **location/extent** ("It goes here") and **explanation/profile** ("This explains it"). Permit tapping a detected edge, drawing/editing/deleting line or polyline, and outlining an area. Preserve original sheet/page/revision/view/crop and document-space coordinates; allow multiple marks/segments and multiple sources per instance. RCP location and section profile are independently linked, then registered through room/host/orientation/dimensions rather than sheet proximity. Bidirectional selection highlights checklist instance, all linked drawing marks, and actual model feature.
+
+### Manual-add and correction transaction
+1. Tap **Add manually** for the feature; select room/host and relevant drawing.
+2. Mark location/extent in source coordinates; optionally link a separate explanatory section/elevation/detail.
+3. Re-examine marked evidence using the automatic interpretation pipeline; propose supported fields, relationships and geometry, and expose unknowns.
+4. Allow typed edits and specific missing-value requests; mark unsupported geometry preliminary, never verified.
+5. Highlight affected geometry and neighboring elements in 3D Preview, including intersections.
+6. Apply a reversible, parameterized change to the actual host assembly; keep feature, annotations, source references and model elements linked.
+7. Persist correction, edit history and Undo; after reprocessing reconcile stable identities and avoid duplicates. Never silently overwrite user-confirmed corrections.
+
+Location marks are not confirmation of complete geometry. Missing scale, registration, orientation or critical dimensions must block verified application or remain explicitly provisional.
+
+### Interpretation and geometry contracts
+Per feature determine host assembly, room-space transform, profile/parameters, datum, run/extent, corners, terminations, finish thicknesses, neighbors and **per-consequential-value** source evidence. Distinguish wall overall width, wall height, reveal opening, recess depth and elevation above finished floor using view type, witness/extension lines, leaders, orientation and detail references. Modify host ceiling/wall component geometry, preserve adjacent openings/finishes, and flag uncertain assembly scope. Deterministically test continuity, corners, terminations, ceiling heights, overlapping recesses, material intersections, MEP and structural clearance; geometrically consistent is not necessarily documented or buildable.
+
+### Persistence, revisions and learning boundaries
+Use stable IDs for project/room, host surface, feature instance, annotation, source, model component and change transaction. Store parameter values/units/datums and provenance individually; preserve detected/manual origin, review and geometry state, assumptions/conflicts/missing data, affected elements and timestamped correction history. Local project storage must retain changes through close/reopen, rebuild and reprocessing; reconciliation should keep uncertain matches for review. Changed sheets/revisions invalidate stale registrations and flag affected instances, while preserving earlier evidence and user edits. Corrections are **project-local knowledge**, not automatic model retraining or universal construction rules.
+
+### Dependencies and ordered implementation slices
+| Slice | Deliverable (all planned) | Required dependencies | Existing stage |
+| --- | --- | --- | --- |
+| FC-1 | Catalog, typed feature/instance/status/source/correction schema | Stable project, room, drawing, surface, model IDs | 0, 2, 5 |
+| FC-2 | Room checklist UI, per-instance Add/Edit, units, review and counts | FC-1; existing frontend room UI | 2, 5 |
+| FC-3 | Location and explanatory-detail annotation tools, linked selection | FC-1; viewer coordinate transforms; page/revision IDs | 1–3 |
+| FC-4 | Local correction transactions, undo, stable reconciliation | FC-2/3; local project persistence | 5 |
+| FC-5 | Parametric cove/tray/soffit/reveal preview and Apply to host | Reliable scale, cross-view registration, host assemblies, FC-1/3/4 | 3–4, 6 |
+| FC-6 | Automatic feature search and evidence-based field population | Feature schema, vector/OCR extraction, wall recognition, view association | 1–3, 6 |
+| FC-7 | Continuity/clash checks and honest room completion reporting | FC-5/6; linked source and model geometry | 5–7 |
+| FC-8 | Revision-impact review, full catalog, offline end-to-end acceptance | Stable correction/reconciliation, supported local inference | 5–8 |
+
+Manual UI may precede fully automatic recognition for testability; **the default finished workflow still requires automatic scale and wall extraction**, with manual calibration/tracing reserved for correction.
+
+### End-to-end acceptance scenarios (NOT YET PASSED)
+1. Auto-detect documented cove; link RCP run + section profile; fill only evidenced fields and generate hosted geometry.
+2. Missed cove: mark RCP edge, link section, preview/apply without manual 3D construction.
+3. Partial evidence: unknown cove depth stays unresolved/assumed, not verified.
+4. Distinguish ½-inch base reveal from floor level or overall wall-height measurement using source context.
+5. Two coves with different profiles in one room retain independent IDs, parameters and sources.
+6. Checklist↔drawing↔3D selection highlights the same instance and its many source marks.
+7. Soffit/reveal application modifies correct host components and identifies neighboring intersections.
+8. Close/reopen and drawing reprocessing retain corrections without duplicates or silent overwrites.
+9. Revised RCP flags affected corrections; old source and history remain available.
+10. Undo restores model, annotations and feature state coherently.
+11. With required local models/files installed, supported feature inference, edits, modeling, persistence and review work offline.
+12. Completion reporting leaves unresolved, assumed, unreviewed and unmodeled items visible; no false "fully verified" room.
+
+### Reusable components already implemented — limited scope
+- Frontend local drawing viewer/room scope, manual scale cross-check, wall tracing, local browser storage, preview and manual rectangular openings are prototypes; they **do not** provide feature checklist instances or source-aware cove geometry.
+- Python `automatic_scale.py` evaluates already-associated dimension candidates; it does **not** read scale automatically from drawing PDFs/images.
+- Python `semantic_constraints.py` validates explicit dimension/target hypotheses and proposes a finish-only floor reveal; it does **not** discover features, interpret source details, or update actual component meshes.
+- Python deterministic wall/opening geometry and source interchange exist, but no general hosted parametric cove/soffit/reveal application, linked checklist UI, revision reconciliation, or end-to-end offline validation has been demonstrated.
+
+### Immediate actionable batch — FC-1
+Define a versioned, dependency-free feature catalog and JSON instance schema with stable room/host IDs, the four independent status axes, source annotation roles, typed per-value units/datums/provenance, multi-instance identity and correction transaction records. Add synthetic tests for two distinct coves, an unresolved depth, a base reveal, and rejection of invalid status/host/source combinations. **Do not** claim detection, 3D application, or acceptance scenarios passed until later batches implement and test them.
