@@ -299,7 +299,7 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 #geometryPreviewLegend p{margin:0;padding:6px 9px;border:1px solid #dbe4ec;border-radius:8px;font-size:12px}
 
 /* Floating source-pixel loupe for the manual scale fallback; no geometry inference. */
-.scale-ruler-magnifier{position:absolute;z-index:8;width:180px;height:180px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 30px #15283b70,0 0 0 1px #91a6bd;background:#fff;pointer-events:none;transform:translate(-50%,-100%);display:grid;place-items:center}
+.scale-ruler-magnifier{position:fixed;z-index:8;width:180px;height:180px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 8px 30px #15283b70,0 0 0 1px #91a6bd;background:#fff;pointer-events:none;transform:translate(-50%,-100%);display:grid;place-items:center}
 .scale-ruler-magnifier[hidden]{display:none}
 .scale-ruler-magnifier canvas{width:180px;height:180px;display:block}
 .scale-ruler-magnifier-label{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);border-radius:12px;padding:3px 9px;background:#122f48d9;color:white;font-size:11px;font-weight:600;white-space:nowrap}
