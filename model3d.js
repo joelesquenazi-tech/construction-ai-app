@@ -1,13 +1,13 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),DB='construction-ai-model-files-v1',META='construction-ai-model-workspace-v1',TYPES=['image/jpeg','image/png','application/pdf'];
 const defaults=()=>({floor:null,elevations:[],length:12,width:10,height:9,yaw:35,issues:[],createdAt:null});
-let state=defaults();try{state={...state,...JSON.parse(localStorage.getItem(META)||'{}')}}catch{}
+const scope=()=>{const c=window.constructionAIProjects?.current();return !c||c.projectId==='legacy-project'&&c.roomId==='legacy-room'?'':':'+c.projectId+':'+c.roomId};const scopedKey=()=>META+scope();const fileKey=key=>scope()?scope()+':'+key:key;let state=defaults();function loadState(){state=defaults();try{state={...state,...JSON.parse(localStorage.getItem(scopedKey())||'{}')}}catch{}}loadState()
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2);
-const save=()=>{localStorage.setItem(META,JSON.stringify(state))};
+const save=()=>{localStorage.setItem(scopedKey(),JSON.stringify(state))};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
-async function put(key,file){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(file,key);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
-async function remove(key){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(key);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function put(key,file){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(file,fileKey(key));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function remove(key){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(fileKey(key));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
 const ready=()=>Boolean(state.floor&&state.elevations.length);
 function refreshFiles(){const floor=$('modelFloorName'),elev=$('modelElevationNames');floor.textContent=state.floor?'Saved: '+state.floor.name:'Floor plan required';elev.textContent=state.elevations.length?state.elevations.map(x=>x.name).join(' · '):'At least one elevation required';$('modelFileSummary').textContent=(state.floor?'1 floor plan':'No floor plan')+' · '+state.elevations.length+' elevation(s)';$('modelContinue').disabled=!ready();$('modelReady').textContent=ready()?'Required references saved on this device.':'Upload a floor plan and at least one elevation.'}
 function openModal(){refreshFiles();const d=$('modelUploadDialog');if(!d.open)d.showModal()}
@@ -29,5 +29,5 @@ $('modelClearElevations').onclick=async()=>{if(!confirm('Remove all saved elevat
 $('modelYaw').value=state.yaw;$('modelYaw').oninput=e=>{state.yaw=Number(e.target.value);save();draw()};
 for(const [id,key] of [['modelLength','length'],['modelWidth','width'],['modelHeight','height']]){$(id).value=state[key];$(id).onchange=e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||v<=0||v>100){e.target.value=state[key];return}state[key]=v;save();draw()}}
 $('modelAddIssue').onsubmit=e=>{e.preventDefault();const title=$('modelNewIssueTitle').value.trim(),detail=$('modelNewIssueDetail').value.trim();if(!title)return;state.issues.push({id:uid(),title:title.slice(0,160),detail:detail.slice(0,1500)||'Requires review.',status:'open',type:'manual',createdAt:new Date().toISOString()});save();$('modelAddIssue').reset();draw()};
-refreshFiles();draw();
+window.addEventListener('construction-room-change',()=>{loadState();$('modelYaw').value=state.yaw;for(const [id,key] of [['modelLength','length'],['modelWidth','width'],['modelHeight','height']])$(id).value=state[key];refreshFiles();draw()});refreshFiles();draw();
 })();
