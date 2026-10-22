@@ -143,3 +143,10 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - The cross-check is included in engine JSON and independently revalidated by the Python adapter. GitHub Actions JavaScript syntax checks passed.
 - Two user-entered dimensions are not independent design verification. Real drawing acceptance tolerances, mobile browser testing, elevation alignment, and automatic recognition remain open.
 - Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_3_SCALE_VERIFICATION.md
+
+## Progress log — 2026-10-22 — Batch 3.4 traced wall 3D preview
+- Frontend PR #24 merged. The 3D Model page now has a separate read-only SVG isometric preview of manually traced wall solids, based on original floor-plan pixels, primary calibration, and independent scale cross-check.
+- Walls are shown as assumed full-height prisms with source sheet/revision/ID and measured centerline lengths. Missing scale checks and unsupported diagonal walls block the preview rather than silently fabricating geometry.
+- Existing conceptual 3D viewer remains separate; the preview does not render Python OBJ output, door/window openings, elevations or source-verified construction geometry.
+- GitHub Actions JavaScript syntax checks passed. Browser/device integration and real-room accuracy verification remain outstanding.
+- Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_4_GEOMETRY_PREVIEW.md
