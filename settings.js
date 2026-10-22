@@ -20,7 +20,7 @@ status.textContent='Reloading app. Saved local data will be retained.';
 window.location.reload();
 }catch(err){status.textContent='Could not check for updates: '+err.message;button.disabled=false;}
 });
-for(const [id,mode] of [['devSimRestart','restart'],['devSimFirstLaunch','first']]){
+for(const [id,mode] of [['devSimRestart','restart'],['devSimFirstLaunch','first'],['devReturnWorkspace','return']]){
 const button=$(id);if(button)button.addEventListener('click',()=>{
 if(typeof window.constructionAIPreviewStartup!=='function'){ $('devPreviewStatus').textContent='Startup preview is not ready. Refresh and try again.';return}
 window.constructionAIPreviewStartup(mode);
