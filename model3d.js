@@ -88,15 +88,53 @@ function showRulerLens(p,e,raw=p){
  }
  rulerLens.hidden=false;
 }
+const fractionDialog=$('scaleRulerFractionDialog'),fractionNumerator=$('scaleRulerNumerator'),fractionDenominator=$('scaleRulerDenominator');
+function fractionGcd(a,b){while(b){const r=a%b;a=b;b=r}return a||1}
+function fractionText(n,d){if(!n)return '0';const g=fractionGcd(n,d);return (n/g)+'/'+(d/g)}
+function selectedFraction(){
+ const n=Number(fractionNumerator.value),d=Number(fractionDenominator.value);
+ return Number.isInteger(n)&&Number.isInteger(d)&&d>0&&n>=0&&n<d?{n,d}:null;
+}
+function rebuildFractionNumerators(){
+ const d=Number(fractionDenominator.value),previous=Number(fractionNumerator.value)||0;
+ fractionNumerator.replaceChildren();
+ for(let n=0;n<d;n++){const option=document.createElement('option');option.value=String(n);option.textContent=String(n);fractionNumerator.append(option)}
+ fractionNumerator.value=String(Math.min(previous,d-1));
+ updateFractionPreview();
+}
+function updateFractionPreview(){
+ const fraction=selectedFraction();
+ $('scaleRulerFractionPreview').textContent=fraction?fractionText(fraction.n,fraction.d)+'″':'Select a valid fraction';
+}
+function rulerFractionLabel(){
+ const n=Number($('scaleRulerFraction').dataset.numerator||0),d=Number($('scaleRulerFraction').dataset.denominator||16);
+ return fractionText(n,d);
+}
+$('scaleRulerFractionOpen').onclick=()=>{
+ const n=Number($('scaleRulerFraction').dataset.numerator||0),d=Number($('scaleRulerFraction').dataset.denominator||16);
+ fractionDenominator.value=String(d);rebuildFractionNumerators();fractionNumerator.value=String(n);updateFractionPreview();fractionDialog.showModal();
+};
+fractionDenominator.onchange=rebuildFractionNumerators;
+fractionNumerator.onchange=updateFractionPreview;
+$('scaleRulerFractionCancel').onclick=()=>fractionDialog.close();
+$('scaleRulerFractionClear').onclick=()=>{fractionNumerator.value='0';updateFractionPreview()};
+$('scaleRulerFractionApply').onclick=()=>{
+ const fraction=selectedFraction();if(!fraction)return;
+ const field=$('scaleRulerFraction');field.value=String(fraction.n/fraction.d);
+ field.dataset.numerator=String(fraction.n);field.dataset.denominator=String(fraction.d);
+ $('scaleRulerFractionOpen').textContent='Fraction: '+fractionText(fraction.n,fraction.d);
+ fractionDialog.close();paintRuler();
+};
+rebuildFractionNumerators();
 function rulerKnownDistance(){
  const ft=Number($('scaleRulerFeet').value),inch=Number($('scaleRulerInches').value),fraction=Number($('scaleRulerFraction').value);
- if(!Number.isInteger(ft)||ft<0||!Number.isInteger(inch)||inch<0||inch>11||!Number.isFinite(fraction)||fraction<0||fraction>=1)return null;
+ if($('scaleRulerFeet').value===''||$('scaleRulerInches').value===''||!Number.isInteger(ft)||ft<0||!Number.isInteger(inch)||inch<0||inch>11||!Number.isFinite(fraction)||fraction<0||fraction>=1)return null;
  const totalInches=ft*12+inch+fraction;
  return totalInches>0?{feet:totalInches/12,feetPart:ft,inchesPart:inch,fractionPart:fraction}:null;
 }
 function rulerDistanceLabel(){
  const d=rulerKnownDistance();
- $('scaleRulerDistanceStatus').textContent=d?`${d.feetPart}′-${d.inchesPart}${d.fractionPart?' '+$('scaleRulerFraction').selectedOptions[0].text:''}″`:'Enter a valid positive distance (0–11 whole inches).';
+ $('scaleRulerDistanceStatus').textContent=d?`${d.feetPart}′-${d.inchesPart}${d.fractionPart?' '+rulerFractionLabel():''}″`:'Enter a valid positive distance (0–11 whole inches).';
 }
 function paintRuler(){rulerDistanceLabel();syncRulerOverlay();const pts=rulerPoints;const r=rulerSize?rulerRadius():10;const ns='http://www.w3.org/2000/svg';rulerOverlay.replaceChildren();if(pts.length===2){const line=document.createElementNS(ns,'line');for(const [k,v] of Object.entries({x1:pts[0].x,y1:pts[0].y,x2:pts[1].x,y2:pts[1].y,stroke:'#f59e0b','stroke-width':Math.max(2,r*.32)}))line.setAttribute(k,v);rulerOverlay.appendChild(line)}pts.forEach((p,i)=>{const halo=document.createElementNS(ns,'circle');for(const [k,v] of Object.entries({cx:p.x,cy:p.y,r:r*1.6,fill:'#0b76d1','fill-opacity':'.15'}))halo.setAttribute(k,v);rulerOverlay.appendChild(halo);const c=document.createElementNS(ns,'circle');for(const [k,v] of Object.entries({cx:p.x,cy:p.y,r,fill:i===rulerDrag?'#ffb52a':'#087ef5',stroke:'#ffffff','stroke-width':Math.max(2,r*.3)}))c.setAttribute(k,v);rulerOverlay.appendChild(c);const dot=document.createElementNS(ns,'circle');for(const [k,v] of Object.entries({cx:p.x,cy:p.y,r:Math.max(2,r*.22),fill:'#ffffff'}))dot.setAttribute(k,v);rulerOverlay.appendChild(dot)});$('scaleRulerPixels').textContent=pts.length===2?rulerDistance().toFixed(1)+' original-image pixels · drag either point to adjust':pts.length===1?'Point 1 placed · drag to adjust or tap point 2':'Tap the first endpoint';$('scaleRulerSave').disabled=!(rulerDistance()>0&&!!rulerKnownDistance())}
 if(typeof ResizeObserver!=='undefined'){new ResizeObserver(()=>{if(rulerSize)paintRuler()}).observe(rulerImage)}
