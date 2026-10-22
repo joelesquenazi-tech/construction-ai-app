@@ -128,3 +128,12 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - Stage 0 real-world ground-truth and acceptance-tolerance gates remain open. Stage 1 is IN PROGRESS.
 - Engine: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/drawing_interchange.py
 - Contract: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/docs/STAGE1_INTERCHANGE.md
+
+## Progress log — 2026-10-22 — Batch 3.2: local wall tracing UI
+- Frontend PR #22 merged: touch-enabled floor plan JPG/PNG wall-centerline tracing, room-scoped local records, explicit sheet/revision and provisional wall dimensions, export in Python engine annotation schema.
+- Existing 3D conceptual model remains unchanged; no automatic wall recognition or automatic in-browser OBJ generation is claimed.
+- Added frontend CI JavaScript syntax workflow; syntax checks passed. The legacy browser regression test requires Playwright and is not yet in the new CI; physical iPad/Safari validation is pending.
+- Tracing export requires existing two-point image calibration; missing independent scale cross-check remains flagged in Python. All traced walls are assumptions.
+- Next: source-coordinate device testing, independent scale check in app, editable opening annotations, then drawing line proposals and multi-view reconciliation.
+- Code: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/wall-tracing.js
+- Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_2_WALL_TRACING.md
