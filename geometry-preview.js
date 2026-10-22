@@ -34,7 +34,7 @@ function solids(src,rec,scale){
   let minX,maxX,minY,maxY;
   if(Math.abs(dy)<1e-6){minX=Math.min(x0,x1);maxX=Math.max(x0,x1);minY=y0-thickness/2;maxY=y0+thickness/2}
   else{minX=x0-thickness/2;maxX=x0+thickness/2;minY=Math.min(y0,y1);maxY=Math.max(y0,y1)}
-  all.push({id:w.id,bounds:[minX,minY,0,maxX,maxY,height],sheet:rec.drawing.sheet,revision:rec.drawing.revision,evidence:w.evidence_id,length:len});
+  const openings=(w.openings||[]).map(o=>({along_m:o.along*FT,width_m:o.width*FT,sill_m:o.sill*FT,height_m:o.height*FT}));const horizontal=Math.abs(dy)<1e-6,direction=horizontal?Math.sign(dx):Math.sign(dy);const base={id:w.id,bounds:[minX,minY,0,maxX,maxY,height],length:len,height,openings,horizontal,direction};const pieces=window.ConstructionWallGeometry.partition(base);all.push({id:w.id,bounds:base.bounds,solids:pieces,sheet:rec.drawing.sheet,revision:rec.drawing.revision,evidence:w.evidence_id,length:len,openingCount:openings.length});
  }
  return all;
 }
@@ -45,7 +45,7 @@ function render(items){
  const center=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2],span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys),Math.max(...zs),.1);
  const unit=290/span,project=(x,y,z)=>[350+((x-center[0])-(y-center[1]))*.76*unit,290+((x-center[0])+(y-center[1]))*.36*unit-z*.72*unit];
  const faces=[];
- for(const item of items){const [x0,y0,z0,x1,y1,z1]=item.bounds;
+ for(const item of items)for(const solid of item.solids){const [x0,y0,z0,x1,y1,z1]=solid;
  const corners=[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];
  for(const [indices,color] of [[[0,1,5,4],'#aec5da'],[[1,2,6,5],'#9bb5cb'],[[2,3,7,6],'#c5d6e6'],[[3,0,4,7],'#b6cce0'],[[4,5,6,7],'#e3ecf4']]){
  const depth=indices.reduce((sum,j)=>sum+corners[j][0]+corners[j][1]+corners[j][2]*.01,0)/indices.length;
@@ -54,11 +54,11 @@ function render(items){
  faces.sort((a,b)=>a.depth-b.depth);
  for(const f of faces)polygon(svg,f.points,f.color,'#4e7595');
  const label=$('geometryPreviewLegend');label.replaceChildren();
- for(const item of items){const row=document.createElement('p');row.textContent=item.id+' · '+(item.length/FT).toFixed(2)+' ft centerline · '+item.sheet+' / '+item.revision+' · assumption';label.appendChild(row)}
+ for(const item of items){const row=document.createElement('p');row.textContent=item.id+' · '+(item.length/FT).toFixed(2)+' ft centerline · '+item.sheet+' / '+item.revision+' · '+item.openingCount+' opening(s) · assumption';label.appendChild(row)}
 }
 async function refresh(){
  const svg=$('geometryPreviewScene');svg.replaceChildren();$('geometryPreviewLegend').replaceChildren();
- try{const src=await window.constructionAITraceSource(),rec=JSON.parse(localStorage.getItem(KEY+src.scope)||'null');const scale=validate(src,rec),items=solids(src,rec,scale);render(items);$('geometryPreviewStatus').textContent=items.length+' traced wall(s) rendered locally from calibrated dimensions. Unverified assumptions; no openings, ceilings or elevations reconciled.'}
+ try{const src=await window.constructionAITraceSource(),rec=JSON.parse(localStorage.getItem(KEY+src.scope)||'null');const scale=validate(src,rec),items=solids(src,rec,scale);render(items);$('geometryPreviewStatus').textContent=items.length+' traced wall(s) rendered locally from calibrated dimensions. Unverified assumptions; rectangular openings shown, but no ceilings or elevations reconciled.'}
  catch(e){$('geometryPreviewStatus').textContent='Preview unavailable: '+e.message}
 }
 $('geometryPreviewRefresh').addEventListener('click',refresh);
