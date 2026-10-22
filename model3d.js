@@ -49,7 +49,7 @@ function rulerRadius(){const rect=rulerImage.getBoundingClientRect();return rect
 function snapRulerPoint(p){if(!$('scaleRulerSnap').checked||!rulerSnapContext)return p;const radius=Math.max(2,Math.min(24,Math.round(rulerRadius()*1.4)));const cx=Math.round(p.x),cy=Math.round(p.y);const x0=Math.max(0,cx-radius),y0=Math.max(0,cy-radius),w=Math.min(rulerSize.width-x0,2*radius+1),h=Math.min(rulerSize.height-y0,2*radius+1);if(w<=0||h<=0)return p;let pixels;try{pixels=rulerSnapContext.getImageData(x0,y0,w,h).data}catch{return p}let best=null,bestDist=Infinity;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const k=(y*w+x)*4;const brightness=(pixels[k]+pixels[k+1]+pixels[k+2])/3;if(pixels[k+3]<200||brightness>95)continue;const dx=x0+x-p.x,dy=y0+y-p.y,d=dx*dx+dy*dy;if(d<bestDist){bestDist=d;best={x:x0+x,y:y0+y}}}return best||p}
 const rulerLens=$('scaleRulerMagnifier'),rulerLensCanvas=$('scaleRulerMagnifierCanvas'),rulerLensCtx=rulerLensCanvas.getContext('2d');
 function hideRulerLens(){rulerLens.hidden=true}
-function showRulerLens(p,e){
+function showRulerLens(p,e,raw=p){
  if(!rulerSize||!rulerImage.complete||!rulerImage.naturalWidth||!rulerLensCtx)return;
  const zoom=4,diameter=180,span=diameter/zoom;
  const lensX=Math.max(96,Math.min(window.innerWidth-96,e.clientX));
@@ -61,23 +61,28 @@ function showRulerLens(p,e){
  ctx.fillStyle='#fff';ctx.fillRect(0,0,diameter,diameter);
  // Sample directly from the decoded original image. Large source canvases may
  // silently fail on iPad Safari; never depend on the snapping pixel buffer.
- const x0=Math.max(0,p.x-span/2),y0=Math.max(0,p.y-span/2);
- const x1=Math.min(rulerSize.width,p.x+span/2),y1=Math.min(rulerSize.height,p.y+span/2);
+ const x0=Math.max(0,raw.x-span/2),y0=Math.max(0,raw.y-span/2);
+ const x1=Math.min(rulerSize.width,raw.x+span/2),y1=Math.min(rulerSize.height,raw.y+span/2);
  const w=x1-x0,h=y1-y0;
  if(w>0&&h>0){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  const dx=(x0-(p.x-span/2))*zoom,dy=(y0-(p.y-span/2))*zoom;
+  const dx=(x0-(raw.x-span/2))*zoom,dy=(y0-(raw.y-span/2))*zoom;
   ctx.drawImage(rulerImage,x0,y0,w,h,dx,dy,w*zoom,h*zoom);
  }
  ctx.strokeStyle='#e78200';ctx.lineWidth=2;
  ctx.beginPath();ctx.moveTo(90,66);ctx.lineTo(90,114);ctx.moveTo(66,90);ctx.lineTo(114,90);ctx.stroke();
  ctx.beginPath();ctx.arc(90,90,5,0,Math.PI*2);ctx.stroke();
+ // Orange crosshair = actual finger location; blue target = saved/snapped endpoint.
+ const tx=90+(p.x-raw.x)*zoom,ty=90+(p.y-raw.y)*zoom;
+ ctx.strokeStyle='#087ef5';ctx.fillStyle='#087ef5';ctx.lineWidth=2.5;
+ ctx.beginPath();ctx.arc(tx,ty,7,0,Math.PI*2);ctx.stroke();
+ ctx.beginPath();ctx.arc(tx,ty,2,0,Math.PI*2);ctx.fill();
  rulerLens.hidden=false;
 }
 function paintRuler(){syncRulerOverlay();const pts=rulerPoints;const r=rulerSize?rulerRadius():10;const ns='http://www.w3.org/2000/svg';rulerOverlay.replaceChildren();if(pts.length===2){const line=document.createElementNS(ns,'line');for(const [k,v] of Object.entries({x1:pts[0].x,y1:pts[0].y,x2:pts[1].x,y2:pts[1].y,stroke:'#f59e0b','stroke-width':Math.max(2,r*.32)}))line.setAttribute(k,v);rulerOverlay.appendChild(line)}pts.forEach((p,i)=>{const halo=document.createElementNS(ns,'circle');for(const [k,v] of Object.entries({cx:p.x,cy:p.y,r:r*1.6,fill:'#0b76d1','fill-opacity':'.15'}))halo.setAttribute(k,v);rulerOverlay.appendChild(halo);const c=document.createElementNS(ns,'circle');for(const [k,v] of Object.entries({cx:p.x,cy:p.y,r,fill:i===rulerDrag?'#ffb52a':'#087ef5',stroke:'#ffffff','stroke-width':Math.max(2,r*.3)}))c.setAttribute(k,v);rulerOverlay.appendChild(c);const dot=document.createElementNS(ns,'circle');for(const [k,v] of Object.entries({cx:p.x,cy:p.y,r:Math.max(2,r*.22),fill:'#ffffff'}))dot.setAttribute(k,v);rulerOverlay.appendChild(dot)});$('scaleRulerPixels').textContent=pts.length===2?rulerDistance().toFixed(1)+' original-image pixels · drag either point to adjust':pts.length===1?'Point 1 placed · drag to adjust or tap point 2':'Tap the first endpoint';$('scaleRulerSave').disabled=!(rulerDistance()>0&&Number($('scaleRulerFeet').value)>0)}
 if(typeof ResizeObserver!=='undefined'){new ResizeObserver(()=>{if(rulerSize)paintRuler()}).observe(rulerImage)}
-rulerOverlay.addEventListener('pointerdown',e=>{const p=rulerCoords(e);if(!p)return;e.preventDefault();const radius=rulerRadius()*2;let idx=rulerPoints.findIndex(q=>Math.hypot(q.x-p.x,q.y-p.y)<=radius);if(idx<0){if(rulerPoints.length===2)rulerPoints=[];idx=rulerPoints.length;rulerPoints.push(snapRulerPoint(p))}rulerDrag=idx;rulerOverlay.setPointerCapture?.(e.pointerId);paintRuler();showRulerLens(rulerPoints[idx],e)});
-rulerOverlay.addEventListener('pointermove',e=>{if(rulerDrag<0)return;const p=rulerCoords(e);if(!p)return;e.preventDefault();rulerPoints[rulerDrag]=snapRulerPoint(p);paintRuler();showRulerLens(rulerPoints[rulerDrag],e)});
+rulerOverlay.addEventListener('pointerdown',e=>{const p=rulerCoords(e);if(!p)return;e.preventDefault();const radius=rulerRadius()*2;let idx=rulerPoints.findIndex(q=>Math.hypot(q.x-p.x,q.y-p.y)<=radius);if(idx<0){if(rulerPoints.length===2)rulerPoints=[];idx=rulerPoints.length;rulerPoints.push(snapRulerPoint(p))}rulerDrag=idx;rulerOverlay.setPointerCapture?.(e.pointerId);paintRuler();showRulerLens(rulerPoints[idx],e,p)});
+rulerOverlay.addEventListener('pointermove',e=>{if(rulerDrag<0)return;const p=rulerCoords(e);if(!p)return;e.preventDefault();rulerPoints[rulerDrag]=snapRulerPoint(p);paintRuler();showRulerLens(rulerPoints[rulerDrag],e,p)});
 function endRulerDrag(e){if(rulerDrag<0)return;rulerDrag=-1;hideRulerLens();if(rulerOverlay.hasPointerCapture?.(e.pointerId))rulerOverlay.releasePointerCapture(e.pointerId);paintRuler()}
 rulerOverlay.addEventListener('pointerup',endRulerDrag);
 rulerOverlay.addEventListener('pointercancel',endRulerDrag);
