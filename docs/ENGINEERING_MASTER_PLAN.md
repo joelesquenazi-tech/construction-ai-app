@@ -173,3 +173,10 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 7. Preserve provider independence and confidentiality; core workflow must not depend on third-party hosted AI.
 
 **Next engineering priority change:** Focus upcoming batches on automatic scale extraction and wall proposal pipeline (Stage 1/2), using synthetic labeled fixtures first and a permissioned real drawing for acceptance. Browser/Python geometry parity and correction persistence remain important, but must not displace automatic-first ingestion. No claim of automatic recognition until tested.
+
+## Progress log — 2026-10-22 — Automatic-first scale reasoning
+- Python engine PR #3 merged: `engine/automatic_scale.py` evaluates source-linked, dimension-line-associated candidates, parses architectural imperial and metric labels, estimates scale, and flags inconsistent/missing evidence as needs_review.
+- Ten new Python unit tests. An initial test failure for feet-inch hyphen parsing was corrected; the updated automated test step passed.
+- This component consumes structured candidates; it does not extract dimensions from PDFs/images or associate text to linework automatically yet. All passing scales are provisional, not source-verified.
+- Next: automated vector PDF extraction and dimension-line association, followed by wall proposal generation. Preserve exception-only user review as the default experience.
+- Engine code: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/automatic_scale.py
