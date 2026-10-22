@@ -120,3 +120,11 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - Stage 0 remains OPEN pending authorized room ground truth, tolerances, drawing-to-model integration and performance/privacy benchmarks.
 - Engine source: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/geometry_core.py
 - Audit: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/docs/STAGE0_BASELINE.md
+
+## Progress log — 2026-10-22 — Stage 1 interchange prototype
+- Engine PR #2 merged: pixel-space traced wall coordinates are calibrated into metric 3D walls and openings, with optional independent scale cross-check, source evidence, revision warnings and OBJ export.
+- Ten interchange tests added; GitHub Actions automated test step passed. The long OCR workflow was still in progress at the time of the test check.
+- The synthetic input is human-traced annotations, not automatic wall recognition or elevation alignment. No end-to-end real-drawing reconstruction demonstrated.
+- Stage 0 real-world ground-truth and acceptance-tolerance gates remain open. Stage 1 is IN PROGRESS.
+- Engine: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/drawing_interchange.py
+- Contract: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/docs/STAGE1_INTERCHANGE.md
