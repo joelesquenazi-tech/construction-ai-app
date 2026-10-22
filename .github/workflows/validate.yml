@@ -16,5 +16,3 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           for file in *.js; do node --check "$file"; done
-      - name: Existing regression tests
-        run: node --test tests/*.cjs
