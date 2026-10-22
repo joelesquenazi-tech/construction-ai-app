@@ -16,7 +16,10 @@ p.onchange=()=>refreshRooms();
 r.onchange=()=>{enter.disabled=!(p.value&&r.value)};
 enter.onclick=()=>{if(!p.value||!r.value)return;finish(p.value,r.value)};
 back.onclick=welcomeScreen;
-function askName(type){const isRoom=type==='room',label=isRoom?'room':'project';const name=prompt('Name your new '+label+(isRoom?' (for example: Primary Bathroom)':' (for example: Star Island Residence)'))?.trim();if(!name)return;try{if(isRoom){const roomId=api.createRoom(p.value,name);refreshRooms(roomId)}else{const id=api.createProject(name);refreshProjects(id);refreshRooms()}}catch(e){alert(e.message)}}
+const createDialog=document.createElement('dialog');createDialog.className='workspace-create-dialog';createDialog.innerHTML='<form method="dialog"><h2 id="workspaceCreateTitle">Create project</h2><label for="workspaceNewName">Name</label><input id="workspaceNewName" maxlength="90" required placeholder="Enter a name"><p id="workspaceCreateError" role="alert"></p><div class="workspace-create-actions"><button type="button" id="workspaceCreateCancel">Cancel</button><button type="submit" class="workspace-primary">Create</button></div></form>';document.body.append(createDialog);
+$('workspaceCreateCancel').onclick=()=>createDialog.close();
+function askName(type){mode=type;const isRoom=type==='room';$('workspaceCreateTitle').textContent=isRoom?'Create room':'Create project';$('workspaceNewName').value='';$('workspaceNewName').placeholder=isRoom?'e.g. Primary Bathroom':'e.g. Star Island Residence';$('workspaceCreateError').textContent='';createDialog.showModal();$('workspaceNewName').focus()}
+createDialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();const name=$('workspaceNewName').value.trim();if(!name)return;try{if(mode==='room'){const roomId=api.createRoom(p.value,name);refreshRooms(roomId)}else{const id=api.createProject(name);refreshProjects(id);refreshRooms()}createDialog.close()}catch(err){$('workspaceCreateError').textContent=err.message}});
 $('workspaceCreateProject').onclick=()=>askName('project');
 createRoom.onclick=()=>askName('room');
 window.constructionAIOpenWorkspaceSelector=()=>{prior=true;chooseScreen()};
