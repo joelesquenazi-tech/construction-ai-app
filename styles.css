@@ -303,3 +303,13 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .scale-ruler-magnifier[hidden]{display:none}
 .scale-ruler-magnifier canvas{width:180px;height:180px;display:block}
 .scale-ruler-magnifier-label{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);border-radius:12px;padding:3px 9px;background:#122f48d9;color:white;font-size:11px;font-weight:600;white-space:nowrap}
+
+/* iPad Safari: keep drag gestures on the drawing, never select text or image. */
+#scaleRulerDialog,#scaleRulerCanvas,#scaleRulerImageStage,#scaleRulerOverlay{
+ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+#scaleRulerOverlay{touch-action:none;cursor:crosshair}
+#scaleRulerImage{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+#scaleRulerDialog.ruler-is-dragging,#scaleRulerDialog.ruler-is-dragging *{
+ -webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;
+}
