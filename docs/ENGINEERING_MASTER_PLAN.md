@@ -157,3 +157,19 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - Eight deterministic JavaScript geometry unit tests added; GitHub Actions syntax and geometry test steps passed.
 - Opening dimensions are still manual assumptions; elevation reconciliation, Python/browser exact fixture comparison, physical iPad testing and verified real drawing geometry remain pending.
 - Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_5_OPENINGS.md
+
+## Product requirement — Automatic-first drawing interpretation (confirmed 2026-10-22)
+**Default user experience:** Upload a floor plan and matching elevations; the system automatically analyzes the drawings, derives scale from dimension annotations and/or graphic scales, independently cross-checks scale, identifies wall geometry and openings, reconciles heights against elevations, builds a source-linked 3D model, and presents exceptions for user review. The user must **not** be required to calibrate scale, trace walls, or manually enter ordinary dimensions as a standard prerequisite.
+
+**Manual tools:** Existing two-point calibration, wall tracing, and opening entry are temporary engineering scaffolding and permanent optional fallback/correction tools, not the product's primary path. Keep them available under an advanced review/correction workflow; do not confuse a passing user-entered scale check with independently verified design evidence.
+
+**Automatic pipeline acceptance gates:**
+1. Extract vector geometry/text when possible, otherwise raster linework and OCR; retain exact source coordinates, sheet/revision, and provenance.
+2. Detect printed dimensions/graphic scales, associate annotations with specific line segments, estimate pixel-to-world transform, cross-check independently, and flag distortion or inconsistent scales.
+3. Propose walls, intersections, doors/windows and room boundaries with evidence and confidence; support diagonal geometry as drawings require.
+4. Reconcile plans with elevations/sections for heights, openings and datum. Never fill absent information without a visible assumption.
+5. Construct deterministic 3D geometry, compare reprojections and known dimensions against source, and route only ambiguity/contradictions to user review.
+6. Measure performance on held-out annotated drawings with ground truth; report precision/recall and dimensional errors, not just that code executes.
+7. Preserve provider independence and confidentiality; core workflow must not depend on third-party hosted AI.
+
+**Next engineering priority change:** Focus upcoming batches on automatic scale extraction and wall proposal pipeline (Stage 1/2), using synthetic labeled fixtures first and a permissioned real drawing for acceptance. Browser/Python geometry parity and correction persistence remain important, but must not displace automatic-first ingestion. No claim of automatic recognition until tested.
