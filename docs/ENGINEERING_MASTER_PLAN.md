@@ -224,3 +224,11 @@ Upload floor plan and elevations (plus sections/details when available) → extr
 - **M1:** Still requires one verified room; add at least one independently checked plan/elevation/detail relationship and one finish-specific modification that leaves unaffected components unchanged, when those details are present in the selected room. Do not claim semantic/detail interpretation complete based on a synthetic fixture alone.
 
 **Next development priority after extraction:** source-linked dimension-to-object association and a typed constraint graph, then a synthetic ½-inch floor-reveal fixture with both finish-only and through-assembly variants. Preserve automatic-first, exception-only UX and provider-independent inference.
+
+## Progress log — 2026-10-22 — Semantic dimension constraints prototype
+- Python engine PR #4 merged. Added `engine/semantic_constraints.py`: typed wall/finish/substrate/floor entities; source-linked dimension hypotheses with witnesses, axis and role; fail-closed binding validation and conflicting-dimension review.
+- Added a finish-only vertical floor reveal constraint proposal: moves the wall finish bottom elevation by the supplied gap (e.g. ½ inch) and explicitly leaves the wall substrate and finished floor unchanged. All modifications remain proposed and require source review.
+- Twelve unit tests added; GitHub Actions automated unit-test step passed. The full drawing OCR workflow and device tests are not evidence of semantic accuracy.
+- This module does not yet extract drawing relationships, decide which component a dimension controls, or change actual meshes. Next: automatic witness-line association, multi-view/datum mapping, typed relationship graph, and deterministic component mesh updates with source reprojection.
+- Engine: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/semantic_constraints.py
+- Contract: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/docs/SEMANTIC_DIMENSION_BINDING.md
