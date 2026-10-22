@@ -150,3 +150,10 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - Existing conceptual 3D viewer remains separate; the preview does not render Python OBJ output, door/window openings, elevations or source-verified construction geometry.
 - GitHub Actions JavaScript syntax checks passed. Browser/device integration and real-room accuracy verification remain outstanding.
 - Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_4_GEOMETRY_PREVIEW.md
+
+## Progress log — 2026-10-22 — Batch 3.5 opening partitioning
+- Frontend PR #25 merged. Manual source-linked door/window opening fields added to the traced wall dialog; rejects out-of-bounds and overlapping openings, stores locally, and exports opening records to the Python engine interchange schema.
+- Browser wall geometry kernel partitions full-height prisms around rectangular openings. Separate traced geometry preview displays resulting wall solids with voids.
+- Eight deterministic JavaScript geometry unit tests added; GitHub Actions syntax and geometry test steps passed.
+- Opening dimensions are still manual assumptions; elevation reconciliation, Python/browser exact fixture comparison, physical iPad testing and verified real drawing geometry remain pending.
+- Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_5_OPENINGS.md
