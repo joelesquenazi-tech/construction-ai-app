@@ -15,6 +15,7 @@ function refreshFiles(){const floor=$('modelFloorName'),elev=$('modelElevationNa
 function openModal(){refreshFiles();const d=$('modelUploadDialog');if(!d.open){if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','')}}
 function enter(){if(!ready()){openModal();return false}draw();return true}
 window.constructionAI3DEnter=enter;
+window.constructionAITraceSource=async()=>({file:await getFile('floor'),calibration:state.calibration?JSON.parse(JSON.stringify(state.calibration)):null,scope:scopedKey(),floorName:state.floor?.name||null,elevations:state.elevations.map(e=>e.name)});
 async function syncReferences(){if(!window.constructionAIImportModelReference)return;const items=[...(state.floor?[{key:'floor',kind:'floor'}]:[]),...state.elevations.map(e=>({key:'elev-'+e.id,kind:'elevation'}))];for(const item of items){const file=await getFile(item.key);if(file)await window.constructionAIImportModelReference(file,item.kind,item.key)}}
 window.addEventListener('construction-library-ready',()=>syncReferences().catch(e=>console.warn('Drawing sync needs review:',e)));
 function issueList(){return state.issues}
