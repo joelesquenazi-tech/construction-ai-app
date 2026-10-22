@@ -1,9 +1,9 @@
 // Only app-shell assets belong in Cache Storage. Private drawings remain in IndexedDB.
 const CACHE_PREFIX = 'construction-ai-shell-';
-const CACHE = `${CACHE_PREFIX}v2-5`;
+const CACHE = `${CACHE_PREFIX}v2-6`;
 const FILES = [
   './', './index.html', './styles.css', './app.js', './data.js', './pwa.js',
-  './settings.js', './projects.js', './library.js', './knowledge.js', './ipad-ocr.js', './interpretation.js', './model3d.js', './light-ui.js', './sidebar.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
+  './settings.js', './projects.js', './library.js', './knowledge.js', './ipad-ocr.js', './interpretation.js', './model3d.js', './light-ui.js', './sidebar.js', './launcher.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
