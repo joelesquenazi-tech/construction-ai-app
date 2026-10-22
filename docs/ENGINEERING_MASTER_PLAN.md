@@ -100,3 +100,14 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 3. Create one-room ground-truth fixture and measurement acceptance checklist.
 4. Add automated tests for scale and source-coordinate transforms.
 5. Identify the smallest implementation to create first actual wall geometry from a verified line.
+
+## Standalone and offline acceptance contract (added 2026-10-21)
+- The delivered application must complete the critical drawing-to-verified-3D workflow with network access disabled. No ChatGPT, OpenAI API, external LLM endpoint, cloud OCR, remote geometry service, or external inference dependency may be required.
+- Local AI/ML inference is permitted and expected where it adds value; it must be distributed with the application or installed locally, with appropriate model licensing and update strategy.
+- Use deterministic parsers, vector extraction, OCR, image processing, geometric constraints, and mesh generation wherever appropriate; local ML proposes ambiguous classifications, never unverified dimensional truth.
+- Separate platform-neutral geometry/verification code from the UI and from replaceable model adapters. Desktop and mobile may have different compute capabilities but must not depend on cloud inference.
+- Treat an optional companion workstation as a local-only enhancement, not a prerequisite for opening and using a saved project. If a feature cannot run on a target mobile device, disclose its limitation and support local deferred processing or a compatible local compute mode.
+- Stage 0 must benchmark the target iPad/iPhone and prospective offline workstation for memory, latency, model size, file size, battery, and storage.
+- Each milestone's automated tests must include a true offline run: network disabled, no remote requests, cold launch, ingest local drawing, calibrate, interpret, reconstruct, verify, save, close, reopen, and reproduce the model.
+- Development may use ChatGPT as a coding assistant; production execution must never require ChatGPT to function.
+- Do not declare M1 or an offline release complete until an actual airplane-mode demonstration passes on target hardware.
