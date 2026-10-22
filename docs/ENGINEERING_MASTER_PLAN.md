@@ -137,3 +137,9 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - Next: source-coordinate device testing, independent scale check in app, editable opening annotations, then drawing line proposals and multi-view reconciliation.
 - Code: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/wall-tracing.js
 - Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_2_WALL_TRACING.md
+
+## Progress log — 2026-10-22 — Batch 3.3 independent scale check
+- Frontend PR #23 merged. Wall tracing now records a second independent known dimension, compares pixel scale to primary calibration, rejects discrepancy above a provisional 2% threshold, and blocks export without a consistent check.
+- The cross-check is included in engine JSON and independently revalidated by the Python adapter. GitHub Actions JavaScript syntax checks passed.
+- Two user-entered dimensions are not independent design verification. Real drawing acceptance tolerances, mobile browser testing, elevation alignment, and automatic recognition remain open.
+- Guide: https://github.com/joelesquenazi-tech/construction-ai-app/blob/main/docs/BATCH_3_3_SCALE_VERIFICATION.md
