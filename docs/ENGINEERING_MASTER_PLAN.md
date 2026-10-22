@@ -11,7 +11,7 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 3. Distinguish measured, inferred, assumed, contradictory, and unknown geometry. Never silently invent.
 4. AI proposes interpretations; deterministic geometry and consistency checks validate them.
 5. Superintendent review and corrections are persistent, reversible, and scoped appropriately.
-6. Design for confidential device-local storage and eventual fully offline inference. Do not require permanent cloud dependency.
+6. Preserve confidential user-controlled data and provider-independent, self-hostable inference. Internet access is allowed; third-party hosted AI must not be required.
 7. Prove one room end to end, then scale to floors/buildings and MEP.
 8. No automatic RFI submission; only flag possible coordination/RFI needs.
 
@@ -64,10 +64,10 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 - Check interference and access, distinguish true clashes from incomplete information.
 - Exit: reviewed test conflicts have defensible geometry and clear provenance.
 
-### Stage 8 — Offline deployment
-- Bundle inference, geometry engine, files, and models locally; benchmark on target devices.
+### Stage 8 — Provider-independent deployment
+- Package the geometry engine and self-hosted inference for local or operator-controlled server deployment; benchmark on target devices.
 - Web/iOS packaging is secondary to engine correctness. Allow optional desktop processing without making network essential.
-- Exit: critical workflow completes offline with acceptable memory and performance.
+- Exit: the critical workflow completes without third-party hosted AI; documented offline features pass airplane-mode tests.
 
 ### Stage 9 — VR/MR
 - Export verified model to lightweight Quest 3S walkthrough; layers and measurements.
@@ -101,13 +101,14 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 4. Add automated tests for scale and source-coordinate transforms.
 5. Identify the smallest implementation to create first actual wall geometry from a verified line.
 
-## Standalone and offline acceptance contract (added 2026-10-21)
-- The delivered application must complete the critical drawing-to-verified-3D workflow with network access disabled. No ChatGPT, OpenAI API, external LLM endpoint, cloud OCR, remote geometry service, or external inference dependency may be required.
-- Local AI/ML inference is permitted and expected where it adds value; it must be distributed with the application or installed locally, with appropriate model licensing and update strategy.
-- Use deterministic parsers, vector extraction, OCR, image processing, geometric constraints, and mesh generation wherever appropriate; local ML proposes ambiguous classifications, never unverified dimensional truth.
-- Separate platform-neutral geometry/verification code from the UI and from replaceable model adapters. Desktop and mobile may have different compute capabilities but must not depend on cloud inference.
-- Treat an optional companion workstation as a local-only enhancement, not a prerequisite for opening and using a saved project. If a feature cannot run on a target mobile device, disclose its limitation and support local deferred processing or a compatible local compute mode.
-- Stage 0 must benchmark the target iPad/iPhone and prospective offline workstation for memory, latency, model size, file size, battery, and storage.
-- Each milestone's automated tests must include a true offline run: network disabled, no remote requests, cold launch, ingest local drawing, calibrate, interpret, reconstruct, verify, save, close, reopen, and reproduce the model.
-- Development may use ChatGPT as a coding assistant; production execution must never require ChatGPT to function.
-- Do not declare M1 or an offline release complete until an actual airplane-mode demonstration passes on target hardware.
+## Provider-independent execution contract (revised 2026-10-21; supersedes offline-only requirement)
+- The core drawing-to-verified-3D product must not require ChatGPT, OpenAI API, a third-party hosted LLM, cloud OCR provider, or other externally controlled AI service to function.
+- Internet connectivity and remote processing are allowed when useful. Remote processing must be deployable on infrastructure controlled by the Construction AI operator, using self-hosted inference and owned processing code.
+- Support a shared, versioned geometry and verification engine with interchangeable execution modes: on-device where feasible, optional local workstation, or a self-hosted server.
+- Keep essential project access, viewing, annotations, measurement, saved models, and correction history usable offline when technically feasible. Heavy automated reconstruction may require an available processing machine or server; disclose this rather than implying it works offline on every device.
+- Use open-source or appropriately licensed locally runnable models and libraries, subject to license, platform and hardware checks. Keep model adapters replaceable.
+- Protect confidential drawings: user-controlled storage, explicit consent before any server upload, encryption in transit for remote processing, access controls, retention/deletion policies, and no undisclosed external data transfer.
+- Stage 0 benchmarks both on-device and self-hosted execution for accuracy, memory, latency, throughput, cost and reliability.
+- Acceptance tests must run the core reconstruction pipeline without calls to third-party hosted AI services. Include a self-hosted end-to-end test and an offline test for the subset of functions promised to work offline.
+- ChatGPT may assist development but is never a production runtime dependency. Vendor-specific services may be optional integrations, never the only path to reconstruct and verify a model.
+- Do not claim the application is fully offline until its entire promised workflow has passed an actual network-disabled test.
