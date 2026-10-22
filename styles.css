@@ -313,3 +313,8 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 #scaleRulerDialog.ruler-is-dragging,#scaleRulerDialog.ruler-is-dragging *{
  -webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;
 }
+
+.scale-ruler-distance{display:flex;align-items:end;gap:12px;flex-wrap:wrap;border:1px solid #dbe4ec;border-radius:12px;padding:10px 12px;margin:10px 0}
+.scale-ruler-distance label{display:flex;flex-direction:column;gap:4px;font-size:13px;min-width:95px;flex:1}
+.scale-ruler-distance input,.scale-ruler-distance select{width:100%;max-width:160px}
+#scaleRulerDistanceStatus{font-weight:600;margin:4px 0 12px}
