@@ -180,3 +180,47 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - This component consumes structured candidates; it does not extract dimensions from PDFs/images or associate text to linework automatically yet. All passing scales are provisional, not source-verified.
 - Next: automated vector PDF extraction and dimension-line association, followed by wall proposal generation. Preserve exception-only user review as the default experience.
 - Engine code: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/automatic_scale.py
+
+## Roadmap amendment — Architectural semantic relationships and detail-driven geometry (2026-10-22)
+
+**Status:** Approved product requirement; not implemented. This amendment strengthens Stages 2–6 and M1. It does not claim that the current engine understands architectural details.
+
+### Core requirement: understand what dimensions *control*
+The engine must not treat OCR text as geometry or assume that horizontal dimensions represent wall widths and vertical dimensions represent wall heights. It must identify dimension witnesses/extension lines, arrowheads/ticks, referenced endpoints, drawing view, scale, units, associated element(s), and whether the measurement controls overall extents, clear opening, finished face, rough framing, elevation/datum, reveal, offset, or assembly layer. Ambiguous dimensions remain unresolved with an explanation and source location.
+
+### Architectural relationship graph (introduce during Stages 2–3)
+- Canonical entities: building, level, room, wall, wall assembly, substrate/framing, finish layer, floor/slab/finish, ceiling, opening, door/window, millwork, trim, baseboard, reveal/profile, datum, dimension, annotation, drawing view, detail reference, and source revision.
+- Typed relationships: bounds, belongs_to, adjacent_to, hosted_by, above/below, offsets_from, aligns_with, continuous_with, dimension_controls, detailed_by, and supersedes/refines. Store explicit direction, coordinate frame, datum and tolerance.
+- Every interpreted relationship must retain sheet/page/revision, drawing coordinates, extracted evidence, inference method, confidence, verification state and dependency links. Do not infer physical connectivity merely from line overlap.
+- Resolve plan-to-elevation-to-section/detail references and drawing view orientation before applying a dimension to a 3D axis or object.
+
+### Detail interpretation and geometry propagation (Stages 3–6)
+- Treat enlarged details and schedules as *additional constraints* that refine a general plan/elevation, not as an automatic override of every other sheet. Reconcile revision, scope, referenced assembly, and actual field condition; flag genuine contradictions.
+- Decompose wall assemblies into framing/substrate, finish layers, baseboards, trims and specialty profiles with independent extents. Changes to one component must not silently alter the whole wall.
+- Example acceptance scenario: a section/elevation specifies a **½-inch vertical reveal at finished floor**. Link the note and dimension to the bottom of the designated wall finish and the top of finished-floor datum. Adjust the finish/profile geometry only if the source detail supports it; do not shorten framing, substrate or entire wall without explicit evidence. If the drawing instead calls for a through-assembly gap or proprietary reveal trim, apply that distinct condition.
+- Resolve whether a reveal dimension is height, depth, width, or setback based on the detail's view and witness lines; never assume ½ inch is vertical solely because the annotation is near the floor.
+- Propagate accepted constraints into deterministic 3D geometry, preserve component IDs and source references, and rerun dependent alignment/continuity checks. If evidence is insufficient, propose interpretations for superintendent approval; never fabricate a verified detail.
+
+### Automatic-first workflow
+Upload floor plan and elevations (plus sections/details when available) → extract and associate dimension/linework evidence → identify objects and view relationships → build semantic constraint graph → reconstruct assemblies → apply detail constraints → validate source reprojections → show **only exceptions** requiring review. Manual tracing, scale entry, and detail edits are fallback/correction tools, not standard prerequisites.
+
+### Measurable acceptance tests (new)
+1. A horizontal dimension in plan controlling wall overall length is associated with that wall's correct endpoints and not its height.
+2. A vertical dimension in elevation controlling wall/finish height is mapped to the correct datum and component, not plan width.
+3. Clear-opening, face-of-finish, and rough-opening dimensions are differentiated even when values are similar.
+4. A ½-inch floor-to-finish reveal changes the finish lower boundary (or specified reveal profile) while leaving structural/framing extents unchanged when the detail calls for finish-only treatment.
+5. Alternate section calling for a through-wall gap produces a different result; ambiguous or contradictory details stop automatic modification and raise a review item.
+6. Plan/elevation/detail references are linked across sheet revisions and orientation; stale or mismatched revisions do not silently override newer information.
+7. Corrected semantic relationships and geometry persist after regeneration and retain an auditable source trail.
+8. Compare proposals with independently annotated real drawing examples: report dimension-to-object assignment accuracy, view-matching accuracy, component-change correctness, false modifications, and unreviewed ambiguities. Define thresholds before acceptance.
+
+### Sequencing and milestone effect
+- **Stage 1:** Automatic dimension extraction and witness-line association with source evidence.
+- **Stage 2:** Semantic element identity and dimension-to-object/axis binding, not merely wall-line recognition.
+- **Stage 3:** View-to-view matching, datums, detail callout linkage and typed constraint graph.
+- **Stage 4:** Component-aware deterministic geometry and dependency-based regeneration.
+- **Stage 5:** Verify dimension bindings and changes by reprojecting each affected component into the correct source view.
+- **Stage 6:** Full architectural detail rules, including reveals, finish layers, baseboards, continuity, trim and proprietary profiles. Prototype the floor-reveal case earlier as a cross-stage acceptance fixture.
+- **M1:** Still requires one verified room; add at least one independently checked plan/elevation/detail relationship and one finish-specific modification that leaves unaffected components unchanged, when those details are present in the selected room. Do not claim semantic/detail interpretation complete based on a synthetic fixture alone.
+
+**Next development priority after extraction:** source-linked dimension-to-object association and a typed constraint graph, then a synthetic ½-inch floor-reveal fixture with both finish-only and through-assembly variants. Preserve automatic-first, exception-only UX and provider-independent inference.
