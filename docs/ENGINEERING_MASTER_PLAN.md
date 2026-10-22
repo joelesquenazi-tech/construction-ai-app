@@ -112,3 +112,11 @@ When user asks for the next batch, start at Stage 0 then advance only after exit
 - Acceptance tests must run the core reconstruction pipeline without calls to third-party hosted AI services. Include a self-hosted end-to-end test and an offline test for the subset of functions promised to work offline.
 - ChatGPT may assist development but is never a production runtime dependency. Vendor-specific services may be optional integrations, never the only path to reconstruct and verify a model.
 - Do not claim the application is fully offline until its entire promised workflow has passed an actual network-disabled test.
+
+## Progress log — 2026-10-21 — Stage 0 started
+- Engine repository PR #1 merged: source-linked metric wall/opening geometry kernel, OBJ exporter, synthetic room fixture, automated calibration/coordinate/geometry tests, and audited baseline.
+- GitHub Actions automated unit-test step passed for the new engine branch; full OCR workflow was still running when the PR was merged.
+- Geometry is built from explicit synthetic records only. Automatic interpretation and plan/elevation alignment remain unimplemented. No claims of M1 completion.
+- Stage 0 remains OPEN pending authorized room ground truth, tolerances, drawing-to-model integration and performance/privacy benchmarks.
+- Engine source: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/engine/geometry_core.py
+- Audit: https://github.com/joelesquenazi-tech/Construction-ai/blob/main/docs/STAGE0_BASELINE.md
