@@ -335,3 +335,37 @@ Manual UI may precede fully automatic recognition for testability; **the default
 
 ### Immediate actionable batch — FC-1
 Define a versioned, dependency-free feature catalog and JSON instance schema with stable room/host IDs, the four independent status axes, source annotation roles, typed per-value units/datums/provenance, multi-instance identity and correction transaction records. Add synthetic tests for two distinct coves, an unresolved depth, a base reveal, and rejection of invalid status/host/source combinations. **Do not** claim detection, 3D application, or acceptance scenarios passed until later batches implement and test them.
+
+
+## Automatic-first drawing setup and precise snapping — approved requirements, PLANNED (2026-10-22)
+
+**User acceptance requirement:** A normal operator uploads floor plans and elevations and receives an evidence-backed, automatically determined scale and plan/elevation alignment status without tracing or manually calibrating. The current UI's `Plan and elevation alignment pending` is an unimplemented check, not a verified conflict or evidence of agreement. Never label a result verified merely because files exist or a dimension was read.
+
+### AS-1 — Drawing type and readiness
+- Classify uploaded sheets as plan, elevation, section, RCP, detail or unknown using actual drawing evidence; allow override and record it. Detect missing views by room, revision and sheet identity.
+- Separate states: `missing_input`, `processing`, `provisional`, `verified_against_available_evidence`, `needs_review`, `unsupported`. Presence of floor and elevation files alone is not proof of alignment.
+- Replace static pending text with actionable status, evidence links and a targeted correction button. Do not block unrelated 3D preview solely because verification is pending; distinguish preliminary vs verified model.
+
+### AS-2 — Automatic scale inference and verification
+- Extract drawing vectors and raster lines; locate dimension witnesses/arrows, read imperial/metric labels, associate labels to *the correct dimension segment* and drawing viewport, infer px/ft or model units. Read graphic scales when available; do not assume PDF paper size establishes architectural scale.
+- Validate with at least two independent, non-collinear or suitably separated dimension observations when possible; check tolerance, consistency, local viewports, image resizing and source revision. Ambiguous, contradictory or insufficient evidence stays `needs_review`.
+- Persist evidence with source sheet, page, revision, original-image coordinates, label, endpoints, confidence, method and tolerance; store canonical units and display architectural ft-in-fraction.
+- Existing `engine/automatic_scale.py` handles supplied dimension observations, **not** automated OCR/vector detection or association. Build extraction/association and end-to-end fixture tests before calling this automatic.
+
+### AS-3 — Plan/elevation cross-view registration
+- Identify matching walls/openings/grids/levels across floor plan and elevations, resolve orientation and datum, propose transforms and elevations; validate independent dimensions and inconsistent/changed revisions.
+- Show which sources align, residual error and which feature(s) need human review. Never auto-verify based on upload count, filename or visual resemblance alone.
+
+### AS-4 — Friendly manual snapping fallback
+- Manual ruler is secondary: touch-down shows a 4× loupe centered on the **actual image coordinate under the finger**, not a fixed raw-pixel crop. Show candidate endpoint/intersection and confidence; allow switching candidate, fine nudging, drag adjustment, explicit Accept and Undo.
+- Prefer geometric line endpoints, witness-line intersections and corners, **not nearest dark pixel** (which may be text or noise). Display finger crosshair separately from the snapped target; indicate when snap is off. A snapped candidate does not itself verify scale.
+- Prevent iPad selection/callouts/scroll gesture conflicts while dragging. Keep image/SVG/loupe coordinate mapping consistent across portrait/landscape, scrolling, zoom, device pixel ratio and image resize. Include debug overlay showing touch CSS pixels, original image pixels and chosen snap pixel for regression.
+- Acceptance: user can place a known 19′-0″ dimension precisely with one-hand iPad touch and edit in feet/inches/fractions (through 1/64″), no displaced endpoint, no text selection, and stable accuracy at edges and after scrolling.
+
+### Engineering order and proof
+1. Synthetic source-page fixtures for dimensions, line intersections, viewport scale, revision and plan/elevation correspondence; deterministic coordinate and unit tests.
+2. Raster/vector feature extraction and dimension association; test with actual user-authorized drawings **locally**, without sending confidential drawings to third-party AI.
+3. Automatic scale evidence and cross-view registration with honest statuses; integrate frontend after evidence contract stabilizes.
+4. Geometric snap candidates, magnifier nudge/accept UX and iPad Safari physical testing.
+5. Acceptance gate: automatic setup succeeds on representative real room with floor and elevations, independent scale agreement, source-linked registration, explicit tolerance and zero mandatory manual clicks; uncertainty triggers focused review. No automatic-success claim before this gate.
+
