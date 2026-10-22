@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),DB='construction-ai-model-files-v1',META='construction-ai-model-workspace-v1',TYPES=['image/jpeg','image/png','application/pdf'];
 const defaults=()=>({floor:null,elevations:[],length:12,width:10,height:9,yaw:35,issues:[],createdAt:null});
-const scope=()=>{const c=window.constructionAIProjects?.current();return !c||c.projectId==='legacy-project'&&c.roomId==='legacy-room'?'':':'+c.projectId+':'+c.roomId};const scopedKey=()=>META+scope();const fileKey=key=>scope()?scope()+':'+key:key;let state=defaults();function loadState(){state=defaults();try{state={...state,...JSON.parse(localStorage.getItem(scopedKey())||'{}')}}catch{}}loadState()
+const scope=()=>{const c=window.constructionAIProjects?.current();return !c||c.projectId==='legacy-project'&&c.roomId==='legacy-room'?'':':'+c.projectId+':'+c.roomId};const scopedKey=()=>META+scope();const fileKey=key=>scope()?scope()+':'+key:key;let state=defaults();function loadState(){state=defaults();try{state={...state,...JSON.parse(localStorage.getItem(scopedKey())||'{}')}}catch(e){}}loadState();
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2);
 const save=()=>{localStorage.setItem(scopedKey(),JSON.stringify(state))};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,7 +10,7 @@ async function put(key,file){const db=await openDB();return new Promise((resolve
 async function remove(key){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(fileKey(key));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
 const ready=()=>Boolean(state.floor&&state.elevations.length);
 function refreshFiles(){const floor=$('modelFloorName'),elev=$('modelElevationNames');floor.textContent=state.floor?'Saved: '+state.floor.name:'Floor plan required';elev.textContent=state.elevations.length?state.elevations.map(x=>x.name).join(' · '):'At least one elevation required';$('modelFileSummary').textContent=(state.floor?'1 floor plan':'No floor plan')+' · '+state.elevations.length+' elevation(s)';$('modelContinue').disabled=!ready();$('modelReady').textContent=ready()?'Required references saved on this device.':'Upload a floor plan and at least one elevation.'}
-function openModal(){refreshFiles();const d=$('modelUploadDialog');if(!d.open)d.showModal()}
+function openModal(){refreshFiles();const d=$('modelUploadDialog');if(!d.open){if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','')}}
 function enter(){if(!ready()){openModal();return false}draw();return true}
 window.constructionAI3DEnter=enter;
 function issueList(){const base=[{id:'scale',title:'Drawing scale not verified',detail:'Confirm the floor-plan scale and at least one known dimension before using measured geometry.',status:'open',type:'setup'},{id:'alignment',title:'Plan and elevation alignment not checked',detail:'Confirm that the uploaded elevations correspond to the same room, floor level, and revision as the plan.',status:'open',type:'setup'}];return [...base,...state.issues]}
@@ -22,8 +22,8 @@ function selectIssue(id){const item=issueList().find(x=>x.id===id);if(!item)retu
 async function storeFiles(){const floor=$('modelFloorFile').files?.[0],elevs=Array.from($('modelElevationFiles').files||[]);if(!floor&&!elevs.length){$('modelUploadStatus').textContent='Select files to upload.';return}const files=[...(floor?[floor]:[]),...elevs];if(files.some(f=>!TYPES.includes(f.type)||f.size>40*1024*1024)){ $('modelUploadStatus').textContent='Use JPG, PNG or PDF files up to 40 MB each.';return}const button=$('modelSaveFiles');button.disabled=true;$('modelUploadStatus').textContent='Saving references privately on this device…';try{if(floor){await put('floor',floor);state.floor={name:floor.name,size:floor.size,type:floor.type}}for(const f of elevs){const id=uid();await put('elev-'+id,f);state.elevations.push({id,name:f.name,size:f.size,type:f.type})}save();refreshFiles();$('modelFloorFile').value='';$('modelElevationFiles').value='';$('modelUploadStatus').textContent='References saved locally. No server upload.';draw()}catch(e){$('modelUploadStatus').textContent='File save failed: '+e.message}finally{button.disabled=false}}
 $('modelSaveFiles').onclick=storeFiles;
 $('modelContinue').onclick=()=>{if(!ready())return;$('modelUploadDialog').close();window.constructionAIShowTab?.('model3d')};
-$('modelCloseDialog').onclick=()=>$('modelUploadDialog').close();
-$('modelUploadDialog').addEventListener('cancel',()=>{});
+$('modelCloseDialog').onclick=()=>{if(!ready()){window.constructionAIShowTab?.('library')}if($('modelUploadDialog').open)$('modelUploadDialog').close()};
+$('modelUploadDialog').addEventListener('cancel',e=>{if(!ready()){e.preventDefault();$('modelUploadStatus').textContent='A floor plan and at least one elevation are required. Select Library to work on other drawings.'}});
 $('modelChangeFiles').onclick=openModal;
 $('modelClearElevations').onclick=async()=>{if(!confirm('Remove all saved elevations for the 3D workspace?'))return;try{for(const e of state.elevations)await remove('elev-'+e.id);state.elevations=[];save();refreshFiles();$('modelUploadStatus').textContent='Elevations removed. Add at least one to open the 3D workspace.'}catch(e){$('modelUploadStatus').textContent=e.message}};
 $('modelYaw').value=state.yaw;$('modelYaw').oninput=e=>{state.yaw=Number(e.target.value);save();draw()};
