@@ -318,3 +318,13 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .scale-ruler-distance label{display:flex;flex-direction:column;gap:4px;font-size:13px;min-width:95px;flex:1}
 .scale-ruler-distance input,.scale-ruler-distance select{width:100%;max-width:160px}
 #scaleRulerDistanceStatus{font-weight:600;margin:4px 0 12px}
+
+.scale-ruler-fraction-dialog{border:1px solid #d7e0ea;border-radius:22px;padding:22px;max-width:min(400px,90vw);width:100%;color:#1c2b3a;background:#fff;box-shadow:0 18px 60px #14283d45}
+.scale-ruler-fraction-dialog::backdrop{background:#14283d65}
+.scale-ruler-fraction-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin:20px 0}
+.scale-ruler-fraction-controls label{display:flex;flex-direction:column;gap:8px;flex:1;max-width:140px}
+.scale-ruler-fraction-controls select{width:100%;font-size:22px;padding:12px 8px;border:1px solid #d3dce7;border-radius:12px;background:white;color:#14283d}
+.fraction-divider{font-size:32px;font-weight:500}
+#scaleRulerFractionPreview{font-size:24px;text-align:center;font-weight:650}
+.fraction-actions{display:flex;justify-content:flex-end;gap:8px}
+#scaleRulerFractionOpen{align-self:end}
