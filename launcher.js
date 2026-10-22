@@ -22,6 +22,12 @@ function askName(type){mode=type;const isRoom=type==='room';$('workspaceCreateTi
 createDialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();const name=$('workspaceNewName').value.trim();if(!name)return;try{if(mode==='room'){const roomId=api.createRoom(p.value,name);refreshRooms(roomId)}else{const id=api.createProject(name);refreshProjects(id);refreshRooms()}createDialog.close()}catch(err){$('workspaceCreateError').textContent=err.message}});
 $('workspaceCreateProject').onclick=()=>askName('project');
 createRoom.onclick=()=>askName('room');
+window.constructionAIPreviewStartup=type=>{
+const settings=document.getElementById('settingsPanel'),toggle=document.getElementById('settingsToggle');
+settings.hidden=true;toggle.setAttribute('aria-expanded','false');
+if(type==='restart'){prior=true;welcomeScreen()}
+if(type==='first'){prior=false;refreshProjects();p.value='';refreshRooms();back.hidden=true;show('choose')}
+};
 window.constructionAIOpenWorkspaceSelector=()=>{prior=true;chooseScreen()};
 $('sidebarProjectButton').onclick=()=>window.constructionAIOpenWorkspaceSelector();
 prior=hasPrevious();if(prior)welcomeScreen();else{refreshProjects();back.hidden=true;show('choose')}
