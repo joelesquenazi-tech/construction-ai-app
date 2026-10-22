@@ -25,6 +25,7 @@ createRoom.onclick=()=>askName('room');
 window.constructionAIPreviewStartup=type=>{
 const settings=document.getElementById('settingsPanel'),toggle=document.getElementById('settingsToggle');
 settings.hidden=true;toggle.setAttribute('aria-expanded','false');
+if(type==='return'){gate.hidden=true;document.documentElement.classList.remove('workspace-pending');return}
 if(type==='restart'){prior=true;welcomeScreen()}
 if(type==='first'){prior=false;refreshProjects();p.value='';refreshRooms();back.hidden=true;show('choose')}
 };
