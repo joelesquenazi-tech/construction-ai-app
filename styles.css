@@ -238,3 +238,33 @@ form input,form textarea,.detail input,.detail textarea,.library-panel input,.li
 .model-setup-actions button:disabled{background:#e4e9f3;border-color:#e4e9f3;color:#8999b1;cursor:not-allowed}
 .model-setup-footer{text-align:center;font-size:12px;color:#778aa4;margin:9px 0 0}
 @media(max-width:480px){.model-setup-dialog{padding:18px 14px}.model-upload-grid{gap:8px}.model-upload-card{padding:12px 7px}.model-setup-header h2{font-size:21px}}
+
+/* Batch 2.6: project-first startup */
+html.workspace-pending body>header,html.workspace-pending body>.app-shell{display:none!important}
+.workspace-gate[hidden],.workspace-gate-view[hidden]{display:none!important}
+.workspace-gate{position:fixed;inset:0;z-index:3000;overflow-y:auto;background:radial-gradient(ellipse at 0 20%,#eaf4ff 0,transparent 36%),radial-gradient(ellipse at 100% 90%,#e9f3ff 0,transparent 35%),#fbfdff;color:#111b32;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.workspace-gate-inner{max-width:1120px;margin:0 auto;padding:42px 24px 24px}
+.workspace-gate-brand{display:flex;align-items:center;justify-content:center;gap:13px;font-size:27px;font-weight:650;letter-spacing:-.025em;color:#101d36}
+.workspace-gate-logo{font-size:30px;color:#1681f5}
+.workspace-gate-divider{border-top:1px solid #e1e7f0;margin:30px 0 36px}
+.workspace-gate-view h1{text-align:center;font-size:36px;font-weight:700;letter-spacing:-.035em;color:#0b1730;margin:0 0 10px}
+.workspace-gate-subtitle{text-align:center;font-size:21px;color:#78879e;margin:0 0 28px}
+.workspace-gate-card{max-width:900px;margin:auto;padding:30px 36px 24px;border-radius:24px;border:1px solid #dce4ef;background:rgba(255,255,255,.94);box-shadow:0 12px 35px #31557d0c}
+.workspace-gate-eyebrow{font-size:15px;color:#8492a7;letter-spacing:.03em;margin-bottom:18px}
+.workspace-last{display:flex;align-items:center;gap:18px;margin:0 0 26px}
+.workspace-building{display:grid;place-items:center;width:64px;height:64px;background:#edf5ff;border-radius:14px;color:#2c4c71;font-size:34px}
+.workspace-last strong{display:block;font-size:25px;color:#111d33;margin-bottom:6px}
+#workspaceLastRoom{font-size:20px;color:#7b8ba4}
+.workspace-gate .workspace-primary,.workspace-gate .workspace-secondary{width:100%;min-height:57px;border-radius:999px;font-size:19px;font-weight:600;display:block;text-align:center}
+.workspace-gate .workspace-primary{background:#2583f5;color:#fff;border:1px solid #2583f5}
+.workspace-gate .workspace-primary:disabled{background:#d0d9e9;border-color:#d0d9e9;color:#fff;cursor:not-allowed}
+.workspace-gate .workspace-secondary{background:#fff;color:#50617b;border:1px solid #bfcbdc;margin-top:12px}
+.workspace-gate-footnote{text-align:center;margin:28px auto;font-size:15px;color:#78879f}
+.workspace-field-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 12px}
+.workspace-field-heading label{font-size:20px;font-weight:650}
+.workspace-field-heading button{border:0;background:transparent;color:#1879eb;font-size:16px;padding:4px 0}
+.workspace-field-heading button:disabled{opacity:.35}
+.workspace-gate select{display:block;width:100%;min-height:59px;border-radius:12px;border:1px solid #c8d3e2;background:#fff;color:#2c4564;font-size:19px;padding:10px 17px;margin:0 0 24px}
+.workspace-gate select:disabled{background:#f1f3f8;color:#9caac0}
+.workspace-gate #workspaceEnter{margin-top:10px}
+@media(max-width:640px){.workspace-gate-inner{padding:24px 14px}.workspace-gate-divider{margin:20px 0 28px}.workspace-gate-brand{font-size:22px}.workspace-gate-view h1{font-size:27px}.workspace-gate-subtitle{font-size:16px}.workspace-gate-card{padding:22px 17px}.workspace-last strong{font-size:19px}#workspaceLastRoom{font-size:15px}.workspace-gate .workspace-primary,.workspace-gate .workspace-secondary{font-size:16px;min-height:51px}.workspace-field-heading label{font-size:17px}.workspace-field-heading button{font-size:13px}.workspace-gate select{font-size:16px}}
