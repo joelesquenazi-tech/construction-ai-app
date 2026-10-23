@@ -132,10 +132,23 @@ $('wallCandidateScan').addEventListener('click',async()=>{
  }catch(e){if(ticket===run)status.textContent='Could not analyze drawing: '+e.message}
  finally{if(freshURL)URL.revokeObjectURL(freshURL);if(ticket===run)button.disabled=false}
 });
+let lastAutoSignature='';
+async function autoScanOnce(){
+ try{
+  const src=await window.constructionAITraceSource();
+  if(!src?.file||!['image/png','image/jpeg'].includes(src.file.type))return;
+  const signature=src.scope+'|'+src.floorName+'|'+src.file.size;
+  if(signature===lastAutoSignature||$('wallCandidateScan').disabled)return;
+  lastAutoSignature=signature;
+  $('wallCandidateScan').click();
+ }catch(e){status.textContent='Local wall scan can be started manually: '+e.message}
+}
+window.addEventListener('construction-3d-enter',autoScanOnce);
 function reset(message){
- ++run;clear();$('wallCandidateScan').disabled=false;
+ lastAutoSignature='';++run;clear();$('wallCandidateScan').disabled=false;
  status.textContent=message;
 }
-window.addEventListener('construction-room-change',()=>reset('Room changed. Find possible wall lines to analyze the selected floor plan.'));
-window.addEventListener('construction-scale-source-changed',()=>reset('Floor plan changed. Scan the new drawing to find possible wall lines.'));
+window.addEventListener('construction-room-change',()=>{reset('Room changed. Finding possible wall lines requires the new floor plan.');if(host.classList.contains('active'))requestAnimationFrame(autoScanOnce)});
+window.addEventListener('construction-scale-source-changed',()=>{reset('Floor plan changed. Local candidate scan will refresh.');if(host.classList.contains('active'))requestAnimationFrame(autoScanOnce)});
+if(host.classList.contains('active'))requestAnimationFrame(autoScanOnce);
 })();
