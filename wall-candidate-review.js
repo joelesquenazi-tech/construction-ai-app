@@ -325,6 +325,16 @@ $('wallMissingSnap').onchange=()=>{
   ?'Optional dark-pixel snap may select text or dimension lines; inspect the blue point.'
   :'Snap off: select two endpoints freely.';
 };
+// Tap directly on the drawing to select a proposed source line as well as
+// selecting its card; distance is measured in screen-size touch pixels.
+svg.addEventListener('click',event=>{
+ if(adding||!report||!drawingSize||!img.clientWidth)return;
+ const point=tools.point(event);if(!point)return;
+ const visible=allItems().filter(c=>candidateStatus(c)!=='rejected_non_wall'||!$('wallHideRejected').checked);
+ const tolerance=16*drawingSize.width/img.getBoundingClientRect().width;
+ const id=reviews.pickNearestLine([point.x,point.y],visible,tolerance);
+ if(id)choose(id);
+});
 svg.addEventListener('pointerdown',event=>{
  if(!adding||!drawingSize||drag>=0)return;
  const point=tools.point(event);if(!point)return;
