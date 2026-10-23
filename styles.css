@@ -466,3 +466,23 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .source-title-warning{border:1px solid #e8bc80;border-radius:12px;padding:12px 14px;background:#fff7e9;color:#86520d;font-size:14px;line-height:1.5}
 .source-title-warning[hidden]{display:none!important}
 .scale-review-actions [hidden]{display:none!important}
+
+/* OCR review feedback must be plainly visible after rejecting untrusted text. */
+.review-panel,.review-panel .detail,.review-panel .field{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.review-panel .original{
+ overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;
+ max-width:100%;max-height:176px;overflow-y:auto;
+ font-size:clamp(17px,1.5vw,22px);line-height:1.35;
+}
+.finding-feedback{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+ border:1px solid #c8d8e8;border-radius:12px;padding:10px 12px;margin:10px 0;
+ background:#f7fafc;color:#183d5c;line-height:1.45;font-size:13px}
+.finding-feedback[hidden]{display:none!important}
+.finding-feedback button{border:1px solid #9bbdda;background:white;color:#1e5e91;min-height:40px}
+.finding-marker-option{display:flex;align-items:center;gap:9px;font-size:13px;color:#54697e;margin:8px 0}
+.finding-marker-option input{width:18px;height:18px;flex:none}
+.finding-current-decision{padding:8px 0;font-size:13px;color:#48637a;overflow-wrap:anywhere}
+.finding-confidence-note{font-size:13px;line-height:1.45;color:#a3641e;background:#fff9eb;
+ border:1px solid #f0d8a8;border-radius:9px;padding:9px;margin:10px 0}
+.review-panel .action-grid button{white-space:normal;min-width:0}
+.queue-item b,.queue-item small{overflow-wrap:anywhere;word-break:break-word}
