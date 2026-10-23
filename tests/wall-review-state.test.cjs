@@ -101,3 +101,5 @@ test('line hit-testing rejects invalid points or selection threshold',()=>{
  assert.throws(()=>review.pickNearestLine([Infinity,10],[],5),/invalid/i);
  assert.throws(()=>review.pickNearestLine([10,10],[],-1),/invalid/i);
 });
+
+test('nearest segment hit selection',()=>{const lines=[{id:'l1',points_px:[[10,25],[220,25]]},{id:'l2',points_px:[[50,60],[180,120]]}];assert.equal(review.pickNearestLine([115,30],lines,10),'l1');assert.equal(review.pickNearestLine([115,90],lines,11),'l2');assert.equal(review.pickNearestLine([115,155],lines,10),null);});
