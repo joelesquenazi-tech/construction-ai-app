@@ -3,8 +3,8 @@
 (()=>{'use strict';
 const root=document.getElementById('model3d');if(!root||!window.constructionAITraceSource)return;
 const KEY='construction-ai-traced-walls-v1:',NS='http://www.w3.org/2000/svg',FT=.3048;
-const section=document.createElement('section');section.id='geometryPreview';section.className='geometry-preview';
-section.innerHTML='<div class="model-view-head"><b>Traced geometry preview</b><span>Unverified · manual wall traces</span></div><p>This separate preview uses your saved wall centerlines and assumed wall thickness/height. It is not the conceptual room, the Python OBJ, or an elevation-verified model.</p><button id="geometryPreviewRefresh" type="button">Generate preview from saved traces</button><p id="geometryPreviewStatus" role="status">No geometry preview generated.</p><svg id="geometryPreviewScene" role="img" aria-label="Three-dimensional preview of manually traced wall geometry" viewBox="0 0 700 450"></svg><div id="geometryPreviewLegend"></div>';
+const section=document.createElement('section');section.id='geometryPreview';section.className='geometry-preview no-traces';
+section.innerHTML='<div class="model-view-head"><b>3D preview from reviewed wall traces</b><span>Unverified · manual tracing fallback</span></div><p>This preview needs reviewed wall centerlines, known scale and assumed wall dimensions. Automatic wall candidates above are only 2D proposals; they are not yet safe to turn into 3D.</p><button id="geometryPreviewRefresh" type="button">Generate 3D from saved traces</button><p id="geometryPreviewStatus" role="status">No reviewed wall traces loaded. Try Find possible wall lines above, or use manual tracing as a fallback. This preview does not yet turn automatic proposals into 3D.</p><svg id="geometryPreviewScene" role="img" aria-label="Three-dimensional preview of manually traced wall geometry" viewBox="0 0 700 450"></svg><div id="geometryPreviewLegend"></div>';
 const workspace=root.querySelector('.model-workspace');workspace?.insertAdjacentElement('beforebegin',section);
 const $=id=>document.getElementById(id),finite=n=>typeof n==='number'&&Number.isFinite(n);
 function validate(src,rec){
@@ -58,9 +58,9 @@ function render(items){
 }
 async function refresh(){
  const svg=$('geometryPreviewScene');svg.replaceChildren();$('geometryPreviewLegend').replaceChildren();
- try{const src=await window.constructionAITraceSource(),rec=JSON.parse(localStorage.getItem(KEY+src.scope)||'null');const scale=validate(src,rec),items=solids(src,rec,scale);render(items);$('geometryPreviewStatus').textContent=items.length+' traced wall(s) rendered locally from calibrated dimensions. Unverified assumptions; rectangular openings shown, but no ceilings or elevations reconciled.'}
- catch(e){$('geometryPreviewStatus').textContent='Preview unavailable: '+e.message}
+ try{const src=await window.constructionAITraceSource(),rec=JSON.parse(localStorage.getItem(KEY+src.scope)||'null');const scale=validate(src,rec),items=solids(src,rec,scale);render(items);section.classList.remove('no-traces');$('geometryPreviewStatus').textContent=items.length+' traced wall(s) rendered locally from calibrated dimensions. Unverified assumptions; rectangular openings shown, but no ceilings or elevations reconciled.'}
+ catch(e){section.classList.add('no-traces');$('geometryPreviewStatus').textContent=e.message==='No wall traces for the current floor plan.'?'No saved manual wall traces for this floor plan. Find possible wall lines above to inspect local 2D candidates. Automatic 3D wall generation is not available yet.':'Cannot generate a traced 3D preview: '+e.message}
 }
 $('geometryPreviewRefresh').addEventListener('click',refresh);
-window.addEventListener('construction-room-change',()=>{$('geometryPreviewScene').replaceChildren();$('geometryPreviewLegend').replaceChildren();$('geometryPreviewStatus').textContent='Room changed. Generate a new preview for this room.'});
+window.addEventListener('construction-room-change',()=>{section.classList.add('no-traces');$('geometryPreviewScene').replaceChildren();$('geometryPreviewLegend').replaceChildren();$('geometryPreviewStatus').textContent='Room changed. Generate a new preview for this room.'});
 })();
