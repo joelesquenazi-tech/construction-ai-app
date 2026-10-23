@@ -2,17 +2,17 @@
  * PDF source bytes remain unchanged in IndexedDB. This does not establish scale.
  */
 (function(root,factory){
- const api=factory();
+ const api=factory(root);
  if(typeof module==='object'&&module.exports)module.exports=api;
  else root.ConstructionDrawingImageSource=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(){
+})(typeof globalThis!=='undefined'?globalThis:this,function(root){
 'use strict';
 const isRaster=file=>file&&(['image/png','image/jpeg'].includes(file.type)||/\.(png|jpe?g)$/i.test(file.name||''));
 const isPDF=file=>!!file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name||''));
 function sourceWarning(name){
  const text=String(name||'').toUpperCase().replace(/[_-]+/g,' ');
  const suggested=
-  /\b(RCP|REFLECTED CEILING|CEILING HEIGHT|CEILING PLAN)\b/.test(text)?'ceiling plan or ceiling-height reference':
+  /\b(RCP|REFLECTED CEILING|CEILING HEIGHTS?|CEILING PLAN)\b/.test(text)?'ceiling plan or ceiling-height reference':
   /\b(ELEVATION|SECTION|DETAIL|INTERIOR ELEV)\b/.test(text)?'elevation, section or detail':'';
  return suggested?'This source filename suggests a '+suggested+
   ', not a floor plan. Check the drawing title, selected view and known horizontal dimension before calibrating. A general drawing scale does not verify a room dimension.':'';
