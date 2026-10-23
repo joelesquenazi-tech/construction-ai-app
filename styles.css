@@ -402,3 +402,61 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 #traceDialog.trace-is-dragging,#traceDialog.trace-is-dragging *{
  user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important;
 }
+
+/* Review-first wall proposals: clear status, user corrections and exact source coords. */
+.wall-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 8px}
+.wall-review-toolbar button,.wall-missing-controls button,#wallRemoveManual{
+ min-height:44px;border-radius:12px;padding:10px 14px;border:1px solid #d6e1eb;
+ background:#f5f8fc;color:#27445f;font-size:13px;font-weight:600
+}
+.wall-review-toolbar button:disabled,.wall-missing-controls button:disabled{opacity:.45}
+#wallConfirm{background:#e9f7ed;border-color:#acdcbc;color:#146b32}
+#wallConfirm.active{background:#b5e5c3;border-color:#16834a}
+#wallReject{background:#fff4ed;border-color:#efc4aa;color:#a34618}
+#wallReject.active{background:#f7d7c2;border-color:#bb5a1e}
+#wallMissing{background:#e8f2ff;border-color:#aacbf6;color:#195ca7}
+.wall-review-instructions{font-size:13px;color:#54687a;line-height:1.5;margin:8px 0}
+.wall-candidate-viewport{max-height:55dvh;overflow:auto;-webkit-overflow-scrolling:touch}
+.wall-candidate-stage{position:relative;width:100%;line-height:0;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#wallCandidateImage{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+#wallCandidateSvg{position:absolute;inset:0;display:block;width:100%;height:100%;max-height:none;
+ touch-action:pan-x pan-y;pointer-events:auto;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#wallCandidateSvg.wall-is-editing{pointer-events:auto;touch-action:none;cursor:crosshair}
+.wall-missing-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px;
+ border:1px solid #c7dff8;background:#edf6ff;border-radius:12px;margin-top:8px}
+.wall-missing-controls label{font-size:13px;display:flex;align-items:center;gap:7px}
+.wall-missing-controls input{width:16px;height:16px}
+#wallMissingHelp{font-size:12px;color:#3e5b75}
+.wall-candidate-counts{font-size:13px;font-weight:600;color:#334e66;margin:13px 0 7px}
+.wall-review-toggle{font-size:12px;display:inline-flex;align-items:center;gap:7px;margin:5px 0}
+.wall-review-item{min-width:170px}
+.wall-review-item.active{border-color:#f97316!important;background:#fff4e7!important}
+#wallRemoveManual{display:block;margin:8px 0;background:#f4edff;border-color:#cbb6ec;color:#6740a8}
+#wallRemoveManual[hidden],.wall-missing-controls[hidden],#wallCandidateResults[hidden]{display:none}
+
+/* Review controls: human confirmation is local 2D evidence, NOT verified 3D. */
+.wall-review-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.wall-review-toolbar button,.wall-missing-controls button,#wallRemoveManual{
+ border:1px solid #cddce9;background:#f6f9fc;color:#234764;border-radius:11px;
+ padding:10px 14px;min-height:44px;font-weight:600;cursor:pointer
+}
+.wall-review-toolbar button:disabled,.wall-missing-controls button:disabled{opacity:.45;cursor:not-allowed}
+.wall-review-toolbar button.active{border-color:#087ef5;background:#e6f2ff}
+#wallConfirm:not(:disabled){background:#e8f5ef;border-color:#b9ddca;color:#167348}
+#wallReject:not(:disabled){background:#fff3eb;border-color:#ecd2c2;color:#a15120}
+.wall-review-instructions{margin:8px 0 12px;color:#4c657b;font-size:13px;line-height:1.45}
+.wall-candidate-stage{position:relative;width:100%;line-height:0;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#wallCandidateImage{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+#wallCandidateSvg{position:absolute;inset:0;display:block;width:100%;height:100%;max-height:none;pointer-events:none;touch-action:pan-x pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#wallCandidateSvg.wall-is-editing{pointer-events:auto;touch-action:none;cursor:crosshair}
+.wall-missing-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 0}
+.wall-missing-controls label{display:flex;gap:7px;align-items:center;font-size:13px;color:#4d6375}
+.wall-missing-controls input{width:17px;height:17px}
+#wallMissingHelp{font-size:13px;color:#63748a;flex:1 1 185px}
+.wall-candidate-counts{font-size:13px;color:#405b73;margin:12px 0 6px}
+.wall-review-toggle{display:inline-flex;gap:7px;align-items:center;font-size:13px;margin:7px 0 10px}
+.wall-review-toggle input{width:16px;height:16px}
+.wall-review-item{min-width:180px}
+.wall-review-item.active{border-color:#087ef5;background:#e9f3ff}
+#wallRemoveManual{margin:6px 0 10px;font-size:12px}
+.wall-candidate-panel [hidden]{display:none!important}
