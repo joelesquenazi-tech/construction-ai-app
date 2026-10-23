@@ -1,9 +1,9 @@
 // Only app-shell assets belong in Cache Storage. Private drawings remain in IndexedDB.
 const CACHE_PREFIX = 'construction-ai-shell-';
-const CACHE = `${CACHE_PREFIX}v3-10-shared-trace-loupe`;
+const CACHE = `${CACHE_PREFIX}v3-11-wall-review-actions`;
 const FILES = [
   './', './index.html', './styles.css', './app.js', './data.js', './pwa.js',
-  './settings.js', './scale-review.js', './projects.js', './library.js', './knowledge.js', './ipad-ocr.js', './interpretation.js', './drawing-point-tools.js', './model3d.js', './wall-tracing.js', './wall-geometry.js', './geometry-preview.js', './wall-proposals.js', './wall-candidate-review.js', './light-ui.js', './sidebar.js', './launcher.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
+  './settings.js', './scale-review.js', './projects.js', './library.js', './knowledge.js', './ipad-ocr.js', './interpretation.js', './drawing-point-tools.js', './model3d.js', './wall-tracing.js', './wall-geometry.js', './geometry-preview.js', './wall-proposals.js', './wall-review-state.js', './wall-candidate-review.js', './light-ui.js', './sidebar.js', './launcher.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
