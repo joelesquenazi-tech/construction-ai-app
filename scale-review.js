@@ -162,9 +162,9 @@ $('scaleReviewOpen').onclick=async()=>{
  try{
   const ref=await current();
   if(!ref||ref.floorName!==packet.source.filename)throw Error('Floor plan does not match the analysis file.');
-  if(!['image/jpeg','image/png'].includes(ref.file.type))
-   throw Error('This viewer supports JPG/PNG. TIFF and PDF preview are not yet available.');
-  imgURL=URL.createObjectURL(ref.file);
+  const prepared=await window.ConstructionDrawingImageSource.prepare(ref.file,{page:packet.source.page});
+  if(ticket!==cycle)return;
+  imgURL=URL.createObjectURL(prepared.blob);
   await new Promise((resolve,reject)=>{
    img.onload=resolve;img.onerror=()=>reject(Error('Could not load the local drawing.'));
    img.src=imgURL;
