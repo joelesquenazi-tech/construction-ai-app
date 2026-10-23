@@ -80,3 +80,24 @@ test('rejected no-wall dimensions remain excluded from confirmed count',()=>{
  st=review.transact(st,{type:'decision',id:a.id,value:'unreviewed'},width,height);
  assert.equal(review.counts(st,[a]).pending,1);
 });
+
+test('tapping source-image line selects closest finite segment only',()=>{
+ const lines=[
+  {id:'left-wall',points_px:[[40,10],[40,110]]},
+  {id:'right-wall',points_px:[[150,10],[150,110]]},
+  {id:'top-wall',points_px:[[40,10],[150,10]]}
+ ];
+ assert.equal(review.pickNearestLine([44,70],lines,8),'left-wall');
+ assert.equal(review.pickNearestLine([149,70],lines,8),'right-wall');
+ assert.equal(review.pickNearestLine([100,13],lines,8),'top-wall');
+ assert.equal(review.pickNearestLine([98,70],lines,8),null);
+});
+test('line hit-testing checks segment endpoints rather than infinite extensions',()=>{
+ const lines=[{id:'finite',points_px:[[40,20],[70,20]]}];
+ assert.equal(review.pickNearestLine([69,25],lines,6),'finite');
+ assert.equal(review.pickNearestLine([140,20],lines,6),null);
+});
+test('line hit-testing rejects invalid points or selection threshold',()=>{
+ assert.throws(()=>review.pickNearestLine([Infinity,10],[],5),/invalid/i);
+ assert.throws(()=>review.pickNearestLine([10,10],[],-1),/invalid/i);
+});
