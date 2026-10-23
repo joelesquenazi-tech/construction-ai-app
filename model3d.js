@@ -34,68 +34,18 @@ $('modelClearCalibration').onclick=()=>{state.calibration=null;save();draw();ref
 let rulerPoints=[],rulerURL=null,rulerSize=null;
 const ruler=$('scaleRulerDialog'),rulerImage=$('scaleRulerImage'),rulerOverlay=$('scaleRulerOverlay');
 function rulerDistance(){return rulerPoints.length===2?Math.hypot(rulerPoints[1].x-rulerPoints[0].x,rulerPoints[1].y-rulerPoints[0].y):0}
-let rulerDrag=-1,rulerSnapCanvas=null,rulerSnapContext=null;
-// Use the image itself as the single coordinate reference for touch, handles,
-// snapping and the loupe. An SVG sized to the scroll viewport can drift from a
-// taller floor-plan image, especially on iPad.
-function syncRulerOverlay(){
- if(!rulerSize)return;
- const width=rulerImage.clientWidth,height=rulerImage.clientHeight;
- if(!width||!height)return;
- rulerOverlay.style.width=width+'px';
- rulerOverlay.style.height=height+'px';
- rulerOverlay.setAttribute('viewBox','0 0 '+rulerSize.width+' '+rulerSize.height);
-}
-const rulerCoords=e=>{
- if(!rulerSize)return null;
- const rect=rulerImage.getBoundingClientRect();
- if(!rect.width||!rect.height)return null;
- return {x:Math.max(0,Math.min(rulerSize.width,(e.clientX-rect.left)*rulerSize.width/rect.width)),
-         y:Math.max(0,Math.min(rulerSize.height,(e.clientY-rect.top)*rulerSize.height/rect.height))};
-};
-function rulerRadius(){const rect=rulerImage.getBoundingClientRect();return rect.width?Math.max(3,Math.min(20,11*rulerSize.width/rect.width)):12}
-function snapRulerPoint(p){if(!$('scaleRulerSnap').checked||!rulerSnapContext)return p;const radius=Math.max(2,Math.min(24,Math.round(rulerRadius()*1.4)));const cx=Math.round(p.x),cy=Math.round(p.y);const x0=Math.max(0,cx-radius),y0=Math.max(0,cy-radius),w=Math.min(rulerSize.width-x0,2*radius+1),h=Math.min(rulerSize.height-y0,2*radius+1);if(w<=0||h<=0)return p;let pixels;try{pixels=rulerSnapContext.getImageData(x0,y0,w,h).data}catch{return p}let best=null,bestDist=Infinity;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const k=(y*w+x)*4;const brightness=(pixels[k]+pixels[k+1]+pixels[k+2])/3;if(pixels[k+3]<200||brightness>95)continue;const dx=x0+x-p.x,dy=y0+y-p.y,d=dx*dx+dy*dy;if(d<bestDist){bestDist=d;best={x:x0+x,y:y0+y}}}return best||p}
-const rulerLens=$('scaleRulerMagnifier'),rulerLensCanvas=$('scaleRulerMagnifierCanvas'),rulerLensCtx=rulerLensCanvas.getContext('2d');
-function hideRulerLens(){rulerLens.hidden=true}
-function showRulerLens(p,e,raw=p){
- if(!rulerSize||!rulerImage.complete||!rulerImage.naturalWidth||!rulerLensCtx)return;
- const diameter=180,zoom=4;
- const rect=rulerImage.getBoundingClientRect();
- if(rect.width<=0||rect.height<=0)return;
- // Zoom means 4x the *visible drawing*, not 4x original image pixels.
- // This preserves the finger-to-drawing correspondence at any image scale.
- const sourcePerCssX=rulerSize.width/rect.width;
- const sourcePerCssY=rulerSize.height/rect.height;
- const spanX=diameter*sourcePerCssX/zoom;
- const spanY=diameter*sourcePerCssY/zoom;
- const left=raw.x-spanX/2,top=raw.y-spanY/2;
- const lensX=Math.max(96,Math.min(window.innerWidth-96,e.clientX));
- const lensY=e.clientY>215?e.clientY-18:Math.min(window.innerHeight-8,e.clientY+205);
- rulerLens.style.left=lensX+'px';rulerLens.style.top=lensY+'px';
- rulerLens.style.transform='translate(-50%,-100%)';
- const ctx=rulerLensCtx;
- ctx.clearRect(0,0,diameter,diameter);ctx.fillStyle='#fff';ctx.fillRect(0,0,diameter,diameter);
- const x0=Math.max(0,left),y0=Math.max(0,top);
- const x1=Math.min(rulerSize.width,left+spanX),y1=Math.min(rulerSize.height,top+spanY);
- if(x1>x0&&y1>y0){
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(rulerImage,x0,y0,x1-x0,y1-y0,
-   (x0-left)*diameter/spanX,(y0-top)*diameter/spanY,
-   (x1-x0)*diameter/spanX,(y1-y0)*diameter/spanY);
- }
- // Crosshair always corresponds to the image pixel directly under the finger.
- ctx.strokeStyle='#e78200';ctx.lineWidth=2;
- ctx.beginPath();ctx.moveTo(90,64);ctx.lineTo(90,116);ctx.moveTo(64,90);ctx.lineTo(116,90);ctx.stroke();
- ctx.beginPath();ctx.arc(90,90,5,0,Math.PI*2);ctx.stroke();
- // Blue ring identifies the snapped/placed endpoint if different from the finger.
- const tx=90+(p.x-raw.x)*diameter/spanX,ty=90+(p.y-raw.y)*diameter/spanY;
- if(Number.isFinite(tx)&&Number.isFinite(ty)){
-  ctx.strokeStyle='#087ef5';ctx.fillStyle='#087ef5';ctx.lineWidth=2.5;
-  ctx.beginPath();ctx.arc(tx,ty,7,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.arc(tx,ty,2,0,Math.PI*2);ctx.fill();
- }
- rulerLens.hidden=false;
-}
+let rulerDrag=-1;
+const rulerTools=window.ConstructionDrawingPointTools.create({
+ image:rulerImage,overlay:rulerOverlay,
+ lens:$('scaleRulerMagnifier'),canvas:$('scaleRulerMagnifierCanvas'),
+ getSize:()=>rulerSize,isSnapEnabled:()=>$('scaleRulerSnap').checked
+});
+const syncRulerOverlay=()=>rulerTools.sync();
+const rulerCoords=e=>rulerTools.point(e);
+const rulerRadius=()=>rulerTools.radius();
+const snapRulerPoint=p=>rulerTools.snap(p);
+const hideRulerLens=()=>rulerTools.hide();
+const showRulerLens=(p,e,raw=p)=>rulerTools.show(p,e,raw);
 const fractionDialog=$('scaleRulerFractionDialog'),fractionNumerator=$('scaleRulerNumerator'),fractionDenominator=$('scaleRulerDenominator');
 function fractionGcd(a,b){while(b){const r=a%b;a=b;b=r}return a||1}
 function fractionText(n,d){if(!n)return '0';const g=fractionGcd(n,d);return (n/g)+'/'+(d/g)}
@@ -159,11 +109,11 @@ $('scaleRulerSnap').onchange=()=>{$('scaleRulerSnapNote').textContent=$('scaleRu
 for(const id of ['scaleRulerFeet','scaleRulerInches','scaleRulerFraction'])$(id).addEventListener('input',paintRuler);
 $('scaleRulerReset').onclick=()=>{rulerPoints=[];paintRuler()};
 $('scaleRulerClose').onclick=()=>ruler.close();
-$('setupCalibrate').onclick=async()=>{const initialScope=scopedKey();rulerPoints=[];rulerSize=null;rulerDrag=-1;ruler.classList.remove('ruler-is-dragging');hideRulerLens();rulerSnapCanvas=null;rulerSnapContext=null;if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerImage.removeAttribute('src');$('scaleRulerStatus').textContent='Loading floor plan from local storage…';paintRuler();ruler.showModal();try{const file=await getFile('floor');if(initialScope!==scopedKey()||!ruler.open)return;if(!file)throw Error('Floor plan file is missing. Upload it again.');if(!['image/jpeg','image/png'].includes(file.type))throw Error('PDF scale selection is not supported yet. Upload a JPG or PNG floor plan to use the point ruler.');rulerURL=URL.createObjectURL(file);rulerImage.onload=()=>{rulerSize={width:rulerImage.naturalWidth,height:rulerImage.naturalHeight};syncRulerOverlay();rulerOverlay.setAttribute('preserveAspectRatio','none');rulerSnapCanvas=document.createElement('canvas');rulerSnapCanvas.width=rulerSize.width;rulerSnapCanvas.height=rulerSize.height;rulerSnapContext=rulerSnapCanvas.getContext('2d',{willReadFrequently:true});rulerSnapContext?.drawImage(rulerImage,0,0);paintRuler();$('scaleRulerStatus').textContent='Tap both endpoints on the scale bar or known dimension.'};rulerImage.src=rulerURL}catch(err){$('scaleRulerStatus').textContent=err.message}};
+$('setupCalibrate').onclick=async()=>{const initialScope=scopedKey();rulerPoints=[];rulerSize=null;rulerDrag=-1;ruler.classList.remove('ruler-is-dragging');hideRulerLens();if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerImage.removeAttribute('src');$('scaleRulerStatus').textContent='Loading floor plan from local storage…';paintRuler();ruler.showModal();try{const file=await getFile('floor');if(initialScope!==scopedKey()||!ruler.open)return;if(!file)throw Error('Floor plan file is missing. Upload it again.');if(!['image/jpeg','image/png'].includes(file.type))throw Error('PDF scale selection is not supported yet. Upload a JPG or PNG floor plan to use the point ruler.');rulerURL=URL.createObjectURL(file);rulerImage.onload=()=>{rulerSize={width:rulerImage.naturalWidth,height:rulerImage.naturalHeight};syncRulerOverlay();paintRuler();$('scaleRulerStatus').textContent='Tap both endpoints on the scale bar or known dimension.'};rulerImage.src=rulerURL}catch(err){$('scaleRulerStatus').textContent=err.message}};
 $('scaleRulerSave').onclick=()=>{const known=rulerKnownDistance(),pixels=rulerDistance();if(!rulerSize||!known||pixels<=0)return;const feet=known.feet;state.calibration={verified:true,feet,pixels,knownDistance:{feet:known.feetPart,inches:known.inchesPart,fraction:known.fractionPart},points:rulerPoints.map(p=>({...p})),imageSize:rulerSize,sourceName:state.floor?.name||'',method:'two-point-manual',verifiedAt:new Date().toISOString()};save();ruler.close();draw()};
 $('setupClearScale').onclick=()=>{if(!confirm('Clear saved scale calibration for this room?'))return;state.calibration=null;save();draw()};
 $('setupOpenElevation').onclick=async()=>{if(!state.elevations.length)return;await window.constructionAISelectSourceDrawing?.('elev-'+state.elevations[0].id)};
-ruler.addEventListener('close',()=>{if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerSize=null;rulerSnapCanvas=null;rulerSnapContext=null;ruler.classList.remove('ruler-is-dragging');hideRulerLens()});
+ruler.addEventListener('close',()=>{if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerSize=null;ruler.classList.remove('ruler-is-dragging');hideRulerLens()});
 function currentIssues(){return issueList().filter(x=>x.status!=='resolved')}
 function project(x,y,z,yaw){const a=yaw*Math.PI/180,xx=x*Math.cos(a)-y*Math.sin(a),yy=x*Math.sin(a)+y*Math.cos(a);return [280+xx*18,230+yy*8-z*19]}
 function path(points,yaw){return points.map((p,i)=>{const q=project(...p,yaw);return(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' ')+' Z'}

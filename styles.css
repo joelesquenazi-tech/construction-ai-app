@@ -373,3 +373,32 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .wall-candidate-disclaimer{font-size:12px!important;color:#637789!important}
 .geometry-preview.no-traces #geometryPreviewScene{display:none}
 .geometry-preview.no-traces #geometryPreviewLegend{display:none}
+
+/* Use the exact calibration touch-loupe layout for wall tracing as well.
+ * The SVG shares the IMG rect so image zoom, scrolling and pointer mapping agree.
+ */
+#traceDialog .trace-canvas{
+ display:block;justify-content:initial;max-height:55dvh;overflow:auto;
+ overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+ background:#f2f5f8;border-radius:12px;
+}
+#traceDialog .trace-stage{
+ position:relative;width:100%;line-height:0;
+ user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+}
+#traceDialog #traceImage{
+ display:block;width:100%;height:auto;max-width:none;
+ user-select:none;-webkit-user-select:none;-webkit-user-drag:none;
+ pointer-events:none;
+}
+#traceDialog #traceSvg{
+ position:absolute;inset:0;width:100%;height:100%;max-height:none;
+ display:block;touch-action:none;cursor:crosshair;user-select:none;
+ -webkit-user-select:none;-webkit-touch-callout:none;
+}
+#traceDialog .trace-snap-label{display:flex;gap:9px;align-items:center;margin-top:8px;font-size:13px}
+#traceDialog .trace-snap-label input{width:17px;height:17px;flex:none}
+#traceDialog #traceSnapNote{font-size:12px;color:#63748a;margin:0}
+#traceDialog.trace-is-dragging,#traceDialog.trace-is-dragging *{
+ user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important;
+}
