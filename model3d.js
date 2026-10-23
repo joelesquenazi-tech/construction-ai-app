@@ -27,11 +27,11 @@ window.constructionAITraceSource=async()=>({file:await getFile('floor'),calibrat
 async function syncReferences(){if(!window.constructionAIImportModelReference)return;const items=[...(state.floor?[{key:'floor',kind:'floor'}]:[]),...state.elevations.map(e=>({key:'elev-'+e.id,kind:'elevation'}))];for(const item of items){const file=await getFile(item.key);if(file)await window.constructionAIImportModelReference(file,item.kind,item.key)}}
 window.addEventListener('construction-library-ready',()=>syncReferences().catch(e=>console.warn('Drawing sync needs review:',e)));
 function issueList(){return state.issues}
-function refreshDrawingSetup(){const c=state.calibration,verified=!!c?.verified;$('setupScaleDescription').textContent=verified?'Calibrated: '+c.feet+' feet over '+c.pixels.toFixed(1)+' pixels.':'Scale calibration pending. Select two points on the drawing.';$('setupCalibrate').disabled=!state.floor;$('setupClearScale').hidden=!verified;$('setupOpenElevation').disabled=!state.elevations.length}
-function refreshCalibration(){const c=state.calibration;$('modelCalibrationStatus').textContent=c?.verified?'Calibrated manually: '+c.feet+' ft over '+c.pixels+' px ('+(c.feet/c.pixels).toFixed(5)+' ft/pixel). Source: '+(state.floor?.name||'floor plan')+'.':'No verified scale calibration is saved for this floor plan.'}
+function refreshDrawingSetup(){const c=state.calibration,verified=!!c?.verified;$('setupScaleDescription').textContent=verified?'Manual scale saved (independent confirmation pending): '+c.feet+' feet over '+c.pixels.toFixed(1)+' pixels.':'Scale calibration pending. Select two points on the drawing.';$('setupCalibrate').disabled=!state.floor;$('setupClearScale').hidden=!verified;$('setupOpenElevation').disabled=!state.elevations.length}
+function refreshCalibration(){const c=state.calibration;$('modelCalibrationStatus').textContent=c?.verified?'Manual scale (independent confirmation pending): '+c.feet+' ft over '+c.pixels+' px ('+(c.feet/c.pixels).toFixed(5)+' ft/pixel). Source: '+(state.floor?.name||'floor plan')+'.':'No verified scale calibration is saved for this floor plan.'}
 $('modelCalibrationForm').onsubmit=e=>{e.preventDefault();const feet=Number($('modelKnownFeet').value),pixels=Number($('modelKnownPixels').value);if(!Number.isFinite(feet)||feet<=0||!Number.isFinite(pixels)||pixels<=0){$('modelCalibrationStatus').textContent='Enter positive known distance and pixel span.';return}state.calibration={verified:true,feet,pixels,sourceName:state.floor?.name||'',method:'manual',verifiedAt:new Date().toISOString()};save();draw();refreshCalibration();$('modelIssueDetail').hidden=true};
 $('modelClearCalibration').onclick=()=>{state.calibration=null;save();draw();refreshCalibration()};
-let rulerPoints=[],rulerURL=null,rulerSize=null;
+let rulerPoints=[],rulerURL=null,rulerSize=null,rulerPrepared=null,rulerSourceWarning='';
 const ruler=$('scaleRulerDialog'),rulerImage=$('scaleRulerImage'),rulerOverlay=$('scaleRulerOverlay');
 function rulerDistance(){return rulerPoints.length===2?Math.hypot(rulerPoints[1].x-rulerPoints[0].x,rulerPoints[1].y-rulerPoints[0].y):0}
 let rulerDrag=-1;
@@ -109,11 +109,48 @@ $('scaleRulerSnap').onchange=()=>{$('scaleRulerSnapNote').textContent=$('scaleRu
 for(const id of ['scaleRulerFeet','scaleRulerInches','scaleRulerFraction'])$(id).addEventListener('input',paintRuler);
 $('scaleRulerReset').onclick=()=>{rulerPoints=[];paintRuler()};
 $('scaleRulerClose').onclick=()=>ruler.close();
-$('setupCalibrate').onclick=async()=>{const initialScope=scopedKey();rulerPoints=[];rulerSize=null;rulerDrag=-1;ruler.classList.remove('ruler-is-dragging');hideRulerLens();if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerImage.removeAttribute('src');$('scaleRulerStatus').textContent='Loading floor plan from local storage…';paintRuler();ruler.showModal();try{let file=await getFile('floor');if(window.constructionAIPdf.isPdf(file)){file=(await window.constructionAIPdf.prepare(file,'1'))[0].blob}if(initialScope!==scopedKey()||!ruler.open)return;if(!file)throw Error('Floor plan file is missing. Upload it again.');if(!['image/jpeg','image/png'].includes(file.type))throw Error('PDF scale selection is not supported yet. Upload a JPG or PNG floor plan to use the point ruler.');rulerURL=URL.createObjectURL(file);rulerImage.onload=()=>{rulerSize={width:rulerImage.naturalWidth,height:rulerImage.naturalHeight};syncRulerOverlay();paintRuler();$('scaleRulerStatus').textContent='Tap both endpoints on the scale bar or known dimension.'};rulerImage.src=rulerURL}catch(err){$('scaleRulerStatus').textContent=err.message}};
-$('scaleRulerSave').onclick=()=>{const known=rulerKnownDistance(),pixels=rulerDistance();if(!rulerSize||!known||pixels<=0)return;const feet=known.feet;state.calibration={verified:true,feet,pixels,knownDistance:{feet:known.feetPart,inches:known.inchesPart,fraction:known.fractionPart},points:rulerPoints.map(p=>({...p})),imageSize:rulerSize,sourceName:state.floor?.name||'',method:'two-point-manual',verifiedAt:new Date().toISOString()};save();ruler.close();draw()};
+$('setupCalibrate').onclick=async()=>{
+ const initialScope=scopedKey();rulerPoints=[];rulerSize=null;rulerPrepared=null;
+ rulerSourceWarning=window.ConstructionDrawingImageSource.sourceWarning(state.floor?.name);
+ rulerDrag=-1;ruler.classList.remove('ruler-is-dragging');hideRulerLens();
+ if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}
+ rulerImage.removeAttribute('src');
+ $('scaleRulerStatus').textContent='Loading local drawing preview…';
+ $('scaleRulerSourceWarning').textContent=rulerSourceWarning;
+ $('scaleRulerSourceWarning').hidden=!rulerSourceWarning;
+ paintRuler();ruler.showModal();
+ try{
+  const source=await getFile('floor');
+  const prepared=await window.ConstructionDrawingImageSource.prepare(source);
+  if(initialScope!==scopedKey()||!ruler.open)return;
+  rulerPrepared=prepared;
+  rulerURL=URL.createObjectURL(prepared.blob);
+  rulerImage.onload=()=>{
+   rulerSize={width:rulerImage.naturalWidth,height:rulerImage.naturalHeight};
+   syncRulerOverlay();paintRuler();
+   $('scaleRulerStatus').textContent=(prepared.converted?'PDF page '+prepared.page+' rendered locally. ':'')+
+    'Choose endpoints on a documented horizontal dimension or graphic scale. This does not independently verify the drawing.';
+  };
+  rulerImage.onerror=()=>{$('scaleRulerStatus').textContent='Could not decode the local drawing preview.'};
+  rulerImage.src=rulerURL;
+ }catch(err){$('scaleRulerStatus').textContent='Unable to open drawing: '+err.message}
+};
+$('scaleRulerSave').onclick=()=>{
+ const known=rulerKnownDistance(),pixels=rulerDistance();
+ if(!rulerSize||!known||pixels<=0||!rulerPrepared)return;
+ if(rulerSourceWarning&&!confirm('The selected file may not be a floor plan. Are these endpoints from a documented, known horizontal distance on the correct drawing? This only saves a manually supplied scale.'))return;
+ const feet=known.feet;
+ state.calibration={verified:true,feet,pixels,
+  knownDistance:{feet:known.feetPart,inches:known.inchesPart,fraction:known.fractionPart},
+  points:rulerPoints.map(p=>({...p})),imageSize:rulerSize,
+  sourceName:state.floor?.name||'',sourcePage:rulerPrepared.page,
+  rasterizedFromPdf:rulerPrepared.converted,method:'two-point-manual',
+  independentlyVerified:false,verifiedAt:new Date().toISOString()};
+ save();ruler.close();draw()
+};
 $('setupClearScale').onclick=()=>{if(!confirm('Clear saved scale calibration for this room?'))return;state.calibration=null;save();draw()};
 $('setupOpenElevation').onclick=async()=>{if(!state.elevations.length)return;await window.constructionAISelectSourceDrawing?.('elev-'+state.elevations[0].id)};
-ruler.addEventListener('close',()=>{if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerSize=null;ruler.classList.remove('ruler-is-dragging');hideRulerLens()});
+ruler.addEventListener('close',()=>{if(rulerURL){URL.revokeObjectURL(rulerURL);rulerURL=null}rulerSize=null;rulerPrepared=null;ruler.classList.remove('ruler-is-dragging');hideRulerLens()});
 function currentIssues(){return issueList().filter(x=>x.status!=='resolved')}
 function project(x,y,z,yaw){const a=yaw*Math.PI/180,xx=x*Math.cos(a)-y*Math.sin(a),yy=x*Math.sin(a)+y*Math.cos(a);return [280+xx*18,230+yy*8-z*19]}
 function path(points,yaw){return points.map((p,i)=>{const q=project(...p,yaw);return(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' ')+' Z'}
