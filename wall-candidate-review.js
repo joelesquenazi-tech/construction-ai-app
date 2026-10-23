@@ -190,16 +190,30 @@ function updateCount(){
 function repaint(){
  paint();renderList();updateCount();updateButtons();updateManualControl();
 }
-function choose(id){
+function choose(id,{recenter=true}={}){
  if(adding)return;
  selected=id;repaint();
  const c=allItems().find(x=>x.id===id);
- if(!c||!img.clientWidth)return;
+ if(!c||!img.clientWidth||!recenter)return;
  const [a,b]=c.points_px;
  viewport.scrollLeft=Math.max(0,((a[0]+b[0])/2)*img.clientWidth/drawingSize.width-viewport.clientWidth/2);
  viewport.scrollTop=Math.max(0,((a[1]+b[1])/2)*img.clientHeight/drawingSize.height-viewport.clientHeight/2);
  if(id.startsWith('manual:'))HELP.textContent='Manually added 2D line. Use Remove selected manual line below to delete, or Undo.';
 }
+// Tapping directly on a proposal selects it; scrolling the drawing remains
+// a native gesture because the non-edit SVG layer does not capture pointers.
+viewport.addEventListener('click',event=>{
+ if(adding||!report||!drawingSize||!img.clientWidth)return;
+ const rect=img.getBoundingClientRect();
+ if(event.clientX<rect.left||event.clientX>rect.right||
+    event.clientY<rect.top||event.clientY>rect.bottom)return;
+ const pixel=pointCore.pointAt(event.clientX,event.clientY,rect,drawingSize);
+ if(!pixel)return;
+ const candidates=allItems().filter(c=>candidateStatus(c)!=='rejected_non_wall'||!$('wallHideRejected').checked);
+ const threshold=16*drawingSize.width/rect.width;
+ const id=reviews.pickNearestLine([pixel.x,pixel.y],candidates,threshold);
+ if(id){choose(id,{recenter:false});HELP.textContent='Selected a line on the drawing. Confirm it if it is a wall, or mark Not a wall.'}
+});
 function updateManualControl(){
  const id='wallRemoveManual';
  let button=$(id);
