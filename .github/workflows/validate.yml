@@ -17,4 +17,4 @@ jobs:
         run: |
           for file in *.js; do node --check "$file"; done
       - name: Construction geometry and scale evidence unit tests
-        run: node --test tests/wall-geometry.test.cjs tests/scale-review.test.cjs
+        run: node --test tests/wall-geometry.test.cjs tests/scale-review.test.cjs tests/wall-proposals.test.cjs
