@@ -486,3 +486,7 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
  border:1px solid #f0d8a8;border-radius:9px;padding:9px;margin:10px 0}
 .review-panel .action-grid button{white-space:normal;min-width:0}
 .queue-item b,.queue-item small{overflow-wrap:anywhere;word-break:break-word}
+
+.scale-review-advanced{margin-top:12px;padding:9px 0;border-top:1px solid #dbe5ed}
+.scale-review-advanced summary{font-size:13px;color:#315d7f;font-weight:600;cursor:pointer;min-height:36px;padding:6px 0}
+.scale-review-advanced[open] summary{margin-bottom:8px}
