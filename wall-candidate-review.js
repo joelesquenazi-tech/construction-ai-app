@@ -64,6 +64,7 @@ function setEditing(on){
  $('wallMissing').textContent=on?'Placing missing line…':'Add missing line';
  $('wallMissingSave').disabled=!on||draft.length!==2;
  if(on)updateDraftText();
+ updateButtons();
 }
 function updateDraftText(){
  const message=draft.length===0?'Tap first endpoint':draft.length===1?'Tap second endpoint':'Both endpoints selected · drag either point to fine-tune';
@@ -184,7 +185,7 @@ function updateCount(){
   c.confirmed+' confirmed in 2D · '+c.rejected+' rejected · '+c.pending+' awaiting review · '+c.manuallyAdded+' added manually';
 }
 function repaint(){
- paint();renderList();updateCount();updateButtons();
+ paint();renderList();updateCount();updateButtons();updateManualControl();
 }
 function choose(id){
  if(adding)return;
@@ -207,8 +208,7 @@ function updateManualControl(){
  }
  button.hidden=!selected?.startsWith('manual:');
 }
-const repaintBase=repaint;
-repaint=()=>{repaintBase();updateManualControl()};
+
 function loadImage(url){
  return new Promise((resolve,reject)=>{
   const load=new Image();
@@ -270,10 +270,10 @@ $('wallCandidateScan').onclick=async()=>{
  }catch(e){if(ticket===scanCycle)status.textContent='Cannot scan drawing: '+e.message}
  finally{if(freshURL)URL.revokeObjectURL(freshURL);if(ticket===scanCycle)button.disabled=false}
 };
-$('wallConfirm').onclick=()=>{if(selected?.startsWith('auto:'))change({
+$('wallConfirm').onclick=()=>{if(!adding&&selected?.startsWith('auto:'))change({
  type:'decision',id:selected,value:'user_confirmed_2d'})};
 $('wallReject').onclick=()=>{
- if(selected?.startsWith('auto:')){
+ if(!adding&&selected?.startsWith('auto:')){
   const id=selected;change({type:'decision',id,value:'rejected_non_wall'});
   if($('wallHideRejected').checked){
    selected=report.candidates.find(c=>(review.decisions[c.id]||'unreviewed')==='unreviewed')?.id||null;
