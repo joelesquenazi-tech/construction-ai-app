@@ -64,7 +64,7 @@ function setEditing(on){
  $('wallMissing').textContent=on?'Placing missing line…':'Add missing line';
  $('wallMissingSave').disabled=!on||draft.length!==2;
  if(on)updateDraftText();
- updateButtons();
+ updateButtons();updateManualControl();
 }
 function updateDraftText(){
  const message=draft.length===0?'Tap first endpoint':draft.length===1?'Tap second endpoint':'Both endpoints selected · drag either point to fine-tune';
@@ -109,7 +109,8 @@ function change(action){
       action.value==='rejected_non_wall'?'Line marked Not a wall; saved for this drawing.':'Candidate moved back to review.')
    :action.type==='add'?'Missing line saved as your own 2D annotation; not a verified wall.':
     action.type==='remove'?'Manually marked line removed.':'Last review decision undone.';
- }catch(e){HELP.textContent='Could not save local correction: '+e.message}
+  return true;
+ }catch(e){HELP.textContent='Could not save local correction: '+e.message;return false}
 }
 function candidateStatus(item){
  return item.id.startsWith('manual:')?'user_confirmed_2d':review?.decisions[item.id]||'unreviewed';
@@ -205,10 +206,10 @@ function updateManualControl(){
  if(!button){
   button=document.createElement('button');button.type='button';button.id=id;
   button.textContent='Remove selected manual line';
-  button.onclick=()=>{if(selected?.startsWith('manual:'))change({type:'remove',id:selected})};
+  button.onclick=()=>{if(!adding&&selected?.startsWith('manual:'))change({type:'remove',id:selected})};
   $('wallCandidateCounts').insertAdjacentElement('afterend',button);
  }
- button.hidden=!selected?.startsWith('manual:');
+ button.hidden=!selected?.startsWith('manual:');button.disabled=adding;
 }
 
 function loadImage(url){
@@ -276,14 +277,16 @@ $('wallConfirm').onclick=()=>{if(!adding&&selected?.startsWith('auto:'))change({
  type:'decision',id:selected,value:'user_confirmed_2d'})};
 $('wallReject').onclick=()=>{
  if(!adding&&selected?.startsWith('auto:')){
-  const id=selected;change({type:'decision',id,value:'rejected_non_wall'});
-  if($('wallHideRejected').checked){
-   selected=report.candidates.find(c=>(review.decisions[c.id]||'unreviewed')==='unreviewed')?.id||null;
+  const id=selected;
+  if(change({type:'decision',id,value:'rejected_non_wall'})&&$('wallHideRejected').checked){
+   selected=report.candidates.find(c=>(review.decisions[c.id]||'unreviewed')==='unreviewed')?.id||
+     report.candidates.find(c=>review.decisions[c.id]==='user_confirmed_2d')?.id||
+     review.manual[0]?.id||null;
    repaint();
   }
  }
 };
-$('wallUndo').onclick=()=>change({type:'undo'});
+$('wallUndo').onclick=()=>{if(!adding)change({type:'undo'})};
 $('wallMissing').onclick=()=>{
  if(!report)return;
  draft=[];drag=-1;dragPointer=null;
