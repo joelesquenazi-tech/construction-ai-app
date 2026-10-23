@@ -20,7 +20,7 @@ section.innerHTML=
  '<div id="wallMissingControls" class="wall-missing-controls" hidden><label><input id="wallMissingSnap" type="checkbox"> Snap to nearby dark pixels (experimental)</label><span id="wallMissingHelp">Tap the first endpoint. Drag to fine-tune.</span><button id="wallMissingSave" type="button" disabled>Save missing line</button><button id="wallMissingCancel" type="button">Cancel</button></div>'+
  '<div id="wallCandidateCounts" class="wall-candidate-counts" role="status"></div><label class="wall-review-toggle"><input id="wallHideRejected" type="checkbox" checked> Hide rejected lines</label><div id="wallCandidateList" class="wall-candidate-list"></div>'+
  '<div class="wall-review-toolbar"><button id="wallConfirm" type="button" disabled>Confirm wall line</button><button id="wallReject" type="button" disabled>Not a wall</button><button id="wallMissing" type="button" disabled>Add missing line</button><button id="wallUndo" type="button" disabled>Undo</button></div>'+
- '<div id="wallReviewInstructions" class="wall-review-instructions" role="status">Select a proposed line below to confirm or reject it. Confirmed lines are still preliminary 2D source annotations.</div>'+
+ '<div id="wallReviewInstructions" class="wall-review-instructions" role="status">Select a proposed line above to confirm or reject it. Confirmed lines are still preliminary 2D source annotations.</div>'+
  '<p class="wall-candidate-disclaimer">Confirming a line saves your 2D decision only. It does not establish scale, wall thickness, elevation alignment, or verified 3D geometry. Rejected lines are excluded from the active candidate overlay, not used for model generation.</p></div>'+
  '<div id="wallCandidateMagnifier" class="scale-ruler-magnifier" hidden aria-hidden="true"><canvas id="wallCandidateMagnifierCanvas" width="180" height="180"></canvas><span class="scale-ruler-magnifier-label">4× detail</span></div>';
 
@@ -325,16 +325,6 @@ $('wallMissingSnap').onchange=()=>{
   ?'Optional dark-pixel snap may select text or dimension lines; inspect the blue point.'
   :'Snap off: select two endpoints freely.';
 };
-// Tap directly on the drawing to select a proposed source line as well as
-// selecting its card; distance is measured in screen-size touch pixels.
-svg.addEventListener('click',event=>{
- if(adding||!report||!drawingSize||!img.clientWidth)return;
- const point=tools.point(event);if(!point)return;
- const visible=allItems().filter(c=>candidateStatus(c)!=='rejected_non_wall'||!$('wallHideRejected').checked);
- const tolerance=16*drawingSize.width/img.getBoundingClientRect().width;
- const id=reviews.pickNearestLine([point.x,point.y],visible,tolerance);
- if(id)choose(id);
-});
 svg.addEventListener('pointerdown',event=>{
  if(!adding||!drawingSize||drag>=0)return;
  const point=tools.point(event);if(!point)return;
