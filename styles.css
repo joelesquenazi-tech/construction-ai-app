@@ -355,3 +355,21 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .scale-review-candidate span{font-size:11px;color:#607488}
 .scale-review-candidate.active{border-color:#087ef5;background:#e8f2ff}
 .scale-review-warning{font-size:13px;line-height:1.5;color:#5e6874;margin-bottom:0}
+
+/* Automatic local straight-line candidate discovery, separate from verified 3D. */
+.wall-candidate-panel{background:#fff;border:1px solid #dce6ef;border-radius:18px;padding:18px;margin:14px 0;color:#244157}
+.wall-candidate-panel .model-view-head{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.wall-candidate-panel p{line-height:1.5;color:#50647a;font-size:14px}
+.wall-candidate-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0}
+.wall-candidate-actions button{background:#e8f2ff;color:#1761ad;border:1px solid #bad4f1;border-radius:12px;padding:11px 15px;min-height:44px;font-weight:650}
+.wall-candidate-actions button:disabled{opacity:.5;cursor:wait}
+.wall-candidate-actions p{margin:0;flex:1;min-width:210px}
+.wall-candidate-viewport{max-height:55dvh;overflow:auto;background:#f1f5f9;border:1px solid #d7e3ed;border-radius:12px;overscroll-behavior:contain}
+#wallCandidateSvg{display:block;width:100%;height:auto;touch-action:pan-x pan-y}
+.wall-candidate-list{display:flex;gap:8px;overflow-x:auto;padding:12px 0 6px}
+.wall-candidate-list button{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;min-width:166px;padding:12px;border:1px solid #d7e3ed;border-radius:12px;background:#f7fafc;color:#294761}
+.wall-candidate-list button.active{border-color:#087ef5;background:#e9f3ff}
+.wall-candidate-list button span{font-size:11px;color:#65798b}
+.wall-candidate-disclaimer{font-size:12px!important;color:#637789!important}
+.geometry-preview.no-traces #geometryPreviewScene{display:none}
+.geometry-preview.no-traces #geometryPreviewLegend{display:none}
