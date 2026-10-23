@@ -8,7 +8,7 @@ const rect={left:48,top:215,width:1120,height:762.75};
 test('calibration and tracing map same iPad touch into original pixels',()=>{
  assert.deepEqual(pointAt(608,596.375,rect,size),{x:2240,y:1525.5});
  assert.deepEqual(pointAt(48,215,rect,size),{x:0,y:0});
- assert.deepEqual(pointAt(1168,977.75,rect,size),size);
+ assert.deepEqual(pointAt(1168,977.75,rect,size),{x:size.width,y:size.height});
 });
 
 test('position updates accurately when drawing scrolls or moves on screen',()=>{
@@ -19,7 +19,7 @@ test('position updates accurately when drawing scrolls or moves on screen',()=>{
 
 test('coordinates clamp beyond edge consistently with existing calibration',()=>{
  assert.deepEqual(pointAt(-500,-300,rect,size),{x:0,y:0});
- assert.deepEqual(pointAt(4000,3000,rect,size),size);
+ assert.deepEqual(pointAt(4000,3000,rect,size),{x:size.width,y:size.height});
 });
 
 test('invalid drawing rect cannot create misleading coordinates',()=>{
