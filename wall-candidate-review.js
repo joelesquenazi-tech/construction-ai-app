@@ -16,11 +16,11 @@ section.innerHTML=
  '<div class="model-view-head"><b>Review possible wall lines</b><span>Local 2D review · not verified 3D</span></div>'+
  '<p>The drawing is checked locally for paired straight lines. Dimension strings and architectural details may also appear. Confirm actual wall lines, reject others, or mark a missing line. Your decisions are retained for this project and drawing.</p>'+
  '<div class="wall-candidate-actions"><button id="wallCandidateScan" type="button">Rescan floor plan</button><p id="wallCandidateStatus" role="status">Automatic scan will start when you enter the 3D workspace.</p></div>'+
- '<div class="wall-review-toolbar"><button id="wallConfirm" type="button" disabled>Confirm wall line</button><button id="wallReject" type="button" disabled>Not a wall</button><button id="wallMissing" type="button" disabled>Add missing line</button><button id="wallUndo" type="button" disabled>Undo</button></div>'+
- '<div id="wallReviewInstructions" class="wall-review-instructions" role="status">Select a proposed line below to confirm or reject it. Confirmed lines are still preliminary 2D source annotations.</div>'+
  '<div id="wallCandidateResults" hidden><div id="wallCandidateViewport" class="wall-candidate-viewport"><div id="wallCandidateStage" class="wall-candidate-stage"><img id="wallCandidateImage" alt="Floor plan with proposed wall-line review overlays" draggable="false"><svg id="wallCandidateSvg" role="img" aria-label="Proposed and manually marked wall centerlines"></svg></div></div>'+
  '<div id="wallMissingControls" class="wall-missing-controls" hidden><label><input id="wallMissingSnap" type="checkbox"> Snap to nearby dark pixels (experimental)</label><span id="wallMissingHelp">Tap the first endpoint. Drag to fine-tune.</span><button id="wallMissingSave" type="button" disabled>Save missing line</button><button id="wallMissingCancel" type="button">Cancel</button></div>'+
  '<div id="wallCandidateCounts" class="wall-candidate-counts" role="status"></div><label class="wall-review-toggle"><input id="wallHideRejected" type="checkbox" checked> Hide rejected lines</label><div id="wallCandidateList" class="wall-candidate-list"></div>'+
+ '<div class="wall-review-toolbar"><button id="wallConfirm" type="button" disabled>Confirm wall line</button><button id="wallReject" type="button" disabled>Not a wall</button><button id="wallMissing" type="button" disabled>Add missing line</button><button id="wallUndo" type="button" disabled>Undo</button></div>'+
+ '<div id="wallReviewInstructions" class="wall-review-instructions" role="status">Select a proposed line below to confirm or reject it. Confirmed lines are still preliminary 2D source annotations.</div>'+
  '<p class="wall-candidate-disclaimer">Confirming a line saves your 2D decision only. It does not establish scale, wall thickness, elevation alignment, or verified 3D geometry. Rejected lines are excluded from the active candidate overlay, not used for model generation.</p></div>'+
  '<div id="wallCandidateMagnifier" class="scale-ruler-magnifier" hidden aria-hidden="true"><canvas id="wallCandidateMagnifierCanvas" width="180" height="180"></canvas><span class="scale-ruler-magnifier-label">4× detail</span></div>';
 
@@ -102,6 +102,7 @@ function change(action){
   persist(reviews.transact(review,action,drawingSize.width,drawingSize.height));
   if(action.type==='add')selected=action.id;
   if(action.type==='remove')selected=null;
+  if(action.type==='undo'&&selected?.startsWith('manual:')&&!review.manual.some(x=>x.id===selected))selected=null;
   repaint();
   HELP.textContent=action.type==='decision'
    ?(action.value==='user_confirmed_2d'?'Wall line confirmed by you in 2D. Not automatically added to 3D.':
@@ -151,7 +152,7 @@ function paint(){
  }
 }
 function renderList(){
- const list=$('wallCandidateList');list.replaceChildren();
+ const list=$('wallCandidateList');const scrollPosition=list.scrollLeft;list.replaceChildren();
  for(const c of allItems()){
   const state=candidateStatus(c);
   if(state==='rejected_non_wall'&&$('wallHideRejected').checked)continue;
@@ -178,6 +179,7 @@ function renderList(){
   text.textContent='No active candidates. Use Add missing line to mark an overlooked wall.';
   list.append(text);
  }
+ list.scrollLeft=scrollPosition;
 }
 function updateCount(){
  const c=reviews.counts(review,report.candidates);
