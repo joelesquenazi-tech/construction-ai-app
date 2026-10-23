@@ -85,11 +85,29 @@ function transact(state,action,width,height){
  next.history=next.history.slice(-MAX_UNDO);
  return next;
 }
+function pickNearestLine(point,candidates,maxDistancePx=12){
+ if(!Array.isArray(point)||point.length!==2||!point.every(number)
+  ||!Array.isArray(candidates)||!number(maxDistancePx)||maxDistancePx<0)
+  throw Error('Invalid screen point or line selection radius');
+ let result=null,best=maxDistancePx*maxDistancePx;
+ for(const item of candidates){
+  if(!item||!Array.isArray(item.points_px)||item.points_px.length!==2)continue;
+  const [a,b]=item.points_px;
+  if(!a.every(number)||!b.every(number))continue;
+  const dx=b[0]-a[0],dy=b[1]-a[1],len2=dx*dx+dy*dy;
+  if(len2<1)continue;
+  const t=Math.max(0,Math.min(1,((point[0]-a[0])*dx+(point[1]-a[1])*dy)/len2));
+  const x=a[0]+dx*t,y=a[1]+dy*t;
+  const distance=(point[0]-x)**2+(point[1]-y)**2;
+  if(distance<=best){best=distance;result=item.id}
+ }
+ return result;
+}
 function counts(state,candidates=[]){
  const values=candidates.map(x=>state.decisions[x.id]||'unreviewed');
  return {pending:values.filter(x=>x==='unreviewed').length,
   confirmed:values.filter(x=>x==='user_confirmed_2d').length+state.manual.length,
   rejected:values.filter(x=>x==='rejected_non_wall').length,manuallyAdded:state.manual.length};
 }
-return {SCHEMA,sourceSignature,createReview,validateReview,validPoints,toSourceCandidate,transact,counts};
+return {SCHEMA,sourceSignature,createReview,validateReview,validPoints,toSourceCandidate,transact,counts,pickNearestLine};
 });
