@@ -1,0 +1,475 @@
+{
+  "schema": "construction-ai-rule-catalog-v1",
+  "version": "1.0.0",
+  "modeling_enabled": false,
+  "rules": [
+    {
+      "rule_id": "CONV-DIM-001",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Dimension annotation, not wall",
+      "domain": "line_purpose",
+      "source": {
+        "document": "USACE A/E/C Graphics Standard",
+        "release": "Release 2.2",
+        "section": "5.5",
+        "pages": [
+          64,
+          65,
+          66,
+          67,
+          68
+        ],
+        "local_reference_id": "usace-graphics-2.2",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "dimension_text",
+        "witness_lines",
+        "terminators",
+        "parallel_pair"
+      ],
+      "result": {
+        "classification": "dimension_annotation_candidate",
+        "constraints": [
+          "Do not extrude dimension annotations",
+          "Project detail takes precedence"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "partial dimension strings",
+        "parallel walls without dimension evidence"
+      ],
+      "tests": [
+        "rule-library:CONV-DIM-001:positive",
+        "rule-library:CONV-DIM-001:missing-evidence",
+        "rule-library:CONV-DIM-001:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "CONV-LINE-002",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Line-purpose classification",
+      "domain": "line_purpose",
+      "source": {
+        "document": "USACE A/E/C Graphics Standard",
+        "release": "Release 2.2",
+        "section": "4.3",
+        "pages": [
+          46,
+          47
+        ],
+        "local_reference_id": "usace-graphics-2.2",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "line_style",
+        "project_legend"
+      ],
+      "result": {
+        "classification": "line_purpose_review",
+        "constraints": [
+          "Unknown styles remain unresolved"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "faint continuous lines",
+        "unknown project line styles"
+      ],
+      "tests": [
+        "rule-library:CONV-LINE-002:positive",
+        "rule-library:CONV-LINE-002:missing-evidence",
+        "rule-library:CONV-LINE-002:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "CONV-SCALE-003",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "View-specific scale",
+      "domain": "scale",
+      "source": {
+        "document": "USACE A/E/C Graphics Standard",
+        "release": "Release 2.2",
+        "section": "4.2.3; 5.5",
+        "pages": [
+          37,
+          38,
+          39
+        ],
+        "local_reference_id": "usace-graphics-2.2",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "view_boundary",
+        "scale_text",
+        "independent_dimensions"
+      ],
+      "result": {
+        "classification": "scale_review_required",
+        "constraints": [
+          "Do not apply a sheet-wide scale",
+          "NTS is not permission to measure"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "NTS views",
+        "different enlarged views on one sheet"
+      ],
+      "tests": [
+        "rule-library:CONV-SCALE-003:positive",
+        "rule-library:CONV-SCALE-003:missing-evidence",
+        "rule-library:CONV-SCALE-003:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "CONV-REF-004",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Cross-view reference",
+      "domain": "source_link",
+      "source": {
+        "document": "USACE A/E/C Graphics Standard",
+        "release": "Release 2.2",
+        "section": "4.2.4",
+        "pages": [
+          40,
+          41,
+          42
+        ],
+        "local_reference_id": "usace-graphics-2.2",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "callout_symbol",
+        "target_view"
+      ],
+      "result": {
+        "classification": "cross_view_reference_candidate",
+        "constraints": [
+          "Do not infer height before view reconciliation"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "missing target sheet",
+        "cross-revision callouts"
+      ],
+      "tests": [
+        "rule-library:CONV-REF-004:positive",
+        "rule-library:CONV-REF-004:missing-evidence",
+        "rule-library:CONV-REF-004:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "CONV-SHEET-005",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Drawing discipline and view clues",
+      "domain": "sheet_type",
+      "source": {
+        "document": "USACE A/E/C CAD Standard",
+        "release": "Release 6.2",
+        "section": "2.4; Tables 2-1 and 2-2",
+        "pages": [],
+        "local_reference_id": "usace-cad-6.2",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "sheet_identifier",
+        "title_block",
+        "project_legend"
+      ],
+      "result": {
+        "classification": "sheet_type_candidate",
+        "constraints": [
+          "Filename alone cannot verify sheet type"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "filename alone",
+        "mixed-discipline sheets"
+      ],
+      "tests": [
+        "rule-library:CONV-SHEET-005:positive",
+        "rule-library:CONV-SHEET-005:missing-evidence",
+        "rule-library:CONV-SHEET-005:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "CONV-LAYER-006",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "CAD layer hint",
+      "domain": "line_purpose",
+      "source": {
+        "document": "USACE A/E/C CAD Standard",
+        "release": "Release 6.2",
+        "section": "4.1–4.2",
+        "pages": [
+          32,
+          33,
+          34,
+          35
+        ],
+        "local_reference_id": "usace-cad-6.2",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "layer_name",
+        "project_legend"
+      ],
+      "result": {
+        "classification": "layer_classification_candidate",
+        "constraints": [
+          "Project legend overrides CAD layer clues"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "nonstandard layer names",
+        "legend contradicts layer"
+      ],
+      "tests": [
+        "rule-library:CONV-LAYER-006:positive",
+        "rule-library:CONV-LAYER-006:missing-evidence",
+        "rule-library:CONV-LAYER-006:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "MODEL-OBJ-007",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Typed model objects",
+      "domain": "semantic_object",
+      "source": {
+        "document": "VA BIM Manual",
+        "release": "November 2023",
+        "section": "2.5–2.6",
+        "pages": [
+          8,
+          9
+        ],
+        "local_reference_id": "va-bim-2023-11",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "element_tag",
+        "documented_size",
+        "related_views"
+      ],
+      "result": {
+        "classification": "semantic_object_candidate",
+        "constraints": [
+          "Stable source-linked semantic IDs required"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "unidentified outlines",
+        "unmatched schedule tag"
+      ],
+      "tests": [
+        "rule-library:MODEL-OBJ-007:positive",
+        "rule-library:MODEL-OBJ-007:missing-evidence",
+        "rule-library:MODEL-OBJ-007:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "MODEL-DIM-008",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Actual versus nominal dimensions",
+      "domain": "assembly_dimension",
+      "source": {
+        "document": "VA BIM Manual",
+        "release": "November 2023",
+        "section": "2.4",
+        "pages": [
+          8
+        ],
+        "local_reference_id": "va-bim-2023-11",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "documented_size",
+        "assembly_detail"
+      ],
+      "result": {
+        "classification": "assembly_dimension_review",
+        "constraints": [
+          "Do not guess a universal tolerance",
+          "Record missing sizes explicitly"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "nominal sizes without actual faces",
+        "unspecified tolerance"
+      ],
+      "tests": [
+        "rule-library:MODEL-DIM-008:positive",
+        "rule-library:MODEL-DIM-008:missing-evidence",
+        "rule-library:MODEL-DIM-008:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "MODEL-FIN-009",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Interior finish conditions",
+      "domain": "finish",
+      "source": {
+        "document": "VA BIM Manual",
+        "release": "November 2023",
+        "section": "2.18.4; 2.5 — confirm against local reference",
+        "pages": [],
+        "local_reference_id": "va-bim-2023-11",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "finish_schedule",
+        "host_reference",
+        "assembly_detail"
+      ],
+      "result": {
+        "classification": "finish_condition_candidate",
+        "constraints": [
+          "Reconcile finishes with room and host sources"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "missing layer thickness",
+        "unresolved ceiling datum"
+      ],
+      "tests": [
+        "rule-library:MODEL-FIN-009:positive",
+        "rule-library:MODEL-FIN-009:missing-evidence",
+        "rule-library:MODEL-FIN-009:source-isolation"
+      ]
+    },
+    {
+      "rule_id": "MODEL-MEP-010",
+      "version": "1.0.0",
+      "status": "proposed",
+      "title": "Separate systems and coordination",
+      "domain": "coordination",
+      "source": {
+        "document": "VA BIM Manual",
+        "release": "November 2023",
+        "section": "2.18.8; 4.8.1",
+        "pages": [],
+        "local_reference_id": "va-bim-2023-11",
+        "citation_status": "needs_local_reference_check"
+      },
+      "evidence_requirements": [
+        "system_document",
+        "host_reference",
+        "clearance_evidence"
+      ],
+      "result": {
+        "classification": "system_coordination_candidate",
+        "constraints": [
+          "No buildability or code-compliance decision",
+          "Do not generate or submit RFIs"
+        ]
+      },
+      "precedence": [
+        "project_documents",
+        "project_standards",
+        "general_references"
+      ],
+      "review": "always_required",
+      "assumptions": [
+        "Reference conventions are context-specific clues, not project requirements."
+      ],
+      "negative_examples": [
+        "undocumented equipment clearances",
+        "incomplete systems"
+      ],
+      "tests": [
+        "rule-library:MODEL-MEP-010:positive",
+        "rule-library:MODEL-MEP-010:missing-evidence",
+        "rule-library:MODEL-MEP-010:source-isolation"
+      ]
+    }
+  ]
+}
