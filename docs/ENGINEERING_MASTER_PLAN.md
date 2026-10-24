@@ -34,6 +34,7 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 - Exit: measurements are repeatable and within a tolerance defined from the source quality; no silent scaling errors.
 
 ### Stage 2 — 2D architectural geometry
+- **VISION-1 integration candidate:** replaceable local vision adapter for drawing-type/element proposals with original-image region provenance and separate persisted review decisions. Connect after source ingestion alongside OCR/vector evidence. Model output cannot directly calibrate or modify canonical geometry. See [LOCAL_VISION_SETUP.md](LOCAL_VISION_SETUP.md); real-model accuracy/latency acceptance remains OPEN.
 - **Planned:** add room-scoped feature catalog and multiple feature instances, separate presence/origin/review/geometry states, typed dimensions with imperial fractions and datums, stable host/annotation/source IDs, and an Add/Edit checklist interface.
 - **Planned:** automatically extract wall linework and propose wall geometry; manual tracing is a correction/fallback, not routine setup. Add mark-edge/polyline/area tools and bidirectional checklist↔drawing selection.
 - Extract vector paths when available; otherwise process raster linework.
@@ -43,6 +44,7 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 - Exit: one room's footprint and openings match independently confirmed ground truth.
 
 ### Stage 3 — Multi-view reconciliation
+- **Planned local interpretation controller:** after the vision baseline is measured, allow bounded access to crop/OCR/reference/rule lookup tools and reconcile typed proposals across sources. Add stop/retry limits, logs and deterministic verification before geometry. Agent orchestration and specialist parallelism are not implemented by VISION-1 and must demonstrate value before expanding.
 - **Planned:** link RCP runs/room edges to elevation/section/detail profiles via host, room coordinates, view orientation and dimension evidence; never infer location from proximity on a sheet. Associate cove/reveal/soffit parameters with independent per-value evidence, missing information and conflicts.
 - Align plan with elevations and sections using gridlines, walls, opening IDs, datum and known dimensions.
 - Infer vertical heights and opening positions only with evidence; expose conflicts and missing data.

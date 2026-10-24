@@ -1,0 +1,10 @@
+#visionPanel { margin-top: 24px; }
+#visionPanel .vision-canvas { position: relative; max-width: 100%; touch-action: none; user-select: none; }
+#visionPanel .vision-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
+#visionPanel .vision-canvas img[hidden] { display: none; }
+#visionPanel .vision-canvas svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#visionPanel label { display: block; margin: 12px 0; }
+#visionPanel input, #visionPanel select { max-width: 100%; }
+#visionPanel .knowledge-actions { flex-wrap: wrap; gap: 8px; }
+#visionPanel details { margin: 16px 0; }
+#visionPanel code { overflow-wrap: anywhere; }
