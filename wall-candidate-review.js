@@ -14,7 +14,7 @@ section.className='wall-candidate-panel';
 section.id='wallCandidatePanel';
 section.innerHTML=
  '<div class="model-view-head"><b>Review possible wall lines</b><span>Local 2D review · not verified 3D</span></div>'+
- '<p>The drawing is checked locally for paired straight lines. Dimension strings and architectural details may also appear. Confirm actual wall lines, reject others, or mark a missing line. Your decisions are retained for this project and drawing.</p>'+
+ '<p>JPG/PNG drawings and the first page of a PDF can be checked locally for paired straight lines. Dimension strings and architectural details may also appear. Confirm actual wall lines, reject others, or mark a missing line. Your decisions are retained for this project and drawing.</p>'+
  '<div class="wall-candidate-actions"><button id="wallCandidateScan" type="button">Rescan floor plan</button><p id="wallCandidateStatus" role="status">Automatic scan will start when you enter the 3D workspace.</p></div>'+
  '<div id="wallCandidateResults" hidden><div id="wallCandidateViewport" class="wall-candidate-viewport"><div id="wallCandidateStage" class="wall-candidate-stage"><img id="wallCandidateImage" alt="Floor plan with proposed wall-line review overlays" draggable="false"><svg id="wallCandidateSvg" role="img" aria-label="Proposed and manually marked wall centerlines"></svg></div></div>'+
  '<div id="wallMissingControls" class="wall-missing-controls" hidden><label><input id="wallMissingSnap" type="checkbox"> Snap to nearby dark pixels (experimental)</label><span id="wallMissingHelp">Tap the first endpoint. Drag to fine-tune.</span><button id="wallMissingSave" type="button" disabled>Save missing line</button><button id="wallMissingCancel" type="button">Cancel</button></div>'+
@@ -262,9 +262,9 @@ $('wallCandidateScan').onclick=async()=>{
  try{
   const src=await window.constructionAITraceSource();if(ticket!==scanCycle)return;
   if(!src?.file)throw Error('Upload a floor plan in Drawing setup first.');
-  if(!['image/png','image/jpeg'].includes(src.file.type))
-   throw Error('This initial local scan requires JPG/PNG. PDF/TIFF recognition remains planned.');
-  freshURL=URL.createObjectURL(src.file);
+  const prepared=await window.ConstructionDrawingImageSource.prepare(src.file);
+  if(ticket!==scanCycle)return;
+  freshURL=URL.createObjectURL(prepared.blob);
   const localImage=await loadImage(freshURL);if(ticket!==scanCycle)return;
   const rows=raster(localImage),found=detector.detectWallCandidates(rows);
   const originalWidth=localImage.naturalWidth,originalHeight=localImage.naturalHeight;
@@ -283,7 +283,7 @@ $('wallCandidateScan').onclick=async()=>{
   selected=candidates.find(c=>review.decisions[c.id]!=='rejected_non_wall')?.id||
     review.manual[0]?.id||null;
   repaint();
-  status.textContent=candidates.length+' possible line pair(s) found. Review and confirm actual walls, reject dimension lines, or add missing walls. Saved reviews remain on this device.';
+  status.textContent=(src.file.type==='application/pdf'?'PDF page 1 rendered on-device. ':'')+candidates.length+' possible line pair(s) found. Review and confirm actual walls, reject dimension lines, or add missing walls. Saved reviews remain on this device.';
  }catch(e){if(ticket===scanCycle)status.textContent='Cannot scan drawing: '+e.message}
  finally{if(freshURL)URL.revokeObjectURL(freshURL);if(ticket===scanCycle)button.disabled=false}
 };
@@ -369,7 +369,7 @@ let lastSignature='';
 async function autoScanOnce(){
  try{
   const src=await window.constructionAITraceSource();
-  if(!src?.file||!['image/png','image/jpeg'].includes(src.file.type))return;
+  if(!src?.file||!(window.ConstructionDrawingImageSource.isRaster(src.file)||window.ConstructionDrawingImageSource.isPDF(src.file)))return;
   const fingerprint=JSON.stringify([src.scope,src.floorName,src.file.size,src.file.lastModified]);
   if(fingerprint===lastSignature||$('wallCandidateScan').disabled)return;
   lastSignature=fingerprint;

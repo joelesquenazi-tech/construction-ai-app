@@ -463,6 +463,34 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 
 .data-reset-section{border-top:1px solid #cbd5e1;margin-top:18px;padding-top:12px}#clearDataDialog{width:min(540px,calc(100vw - 40px));max-height:85vh;overflow:auto;padding:24px;border:1px solid #94a3b8;border-radius:12px;background:#fff;color:#162235}#clearDataDialog::backdrop{background:rgba(0,0,0,.65)}#clearDataConfirmation{display:block;width:100%;box-sizing:border-box;margin:10px 0;padding:12px;min-height:44px}#clearDataDialog button{min-height:44px;margin:6px 8px 0 0}
 
+.source-title-warning{border:1px solid #e8bc80;border-radius:12px;padding:12px 14px;background:#fff7e9;color:#86520d;font-size:14px;line-height:1.5}
+.source-title-warning[hidden]{display:none!important}
+.scale-review-actions [hidden]{display:none!important}
+
+/* OCR review feedback must be plainly visible after rejecting untrusted text. */
+.review-panel,.review-panel .detail,.review-panel .field{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.review-panel .original{
+ overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;
+ max-width:100%;max-height:176px;overflow-y:auto;
+ font-size:clamp(17px,1.5vw,22px);line-height:1.35;
+}
+.finding-feedback{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+ border:1px solid #c8d8e8;border-radius:12px;padding:10px 12px;margin:10px 0;
+ background:#f7fafc;color:#183d5c;line-height:1.45;font-size:13px}
+.finding-feedback[hidden]{display:none!important}
+.finding-feedback button{border:1px solid #9bbdda;background:white;color:#1e5e91;min-height:40px}
+.finding-marker-option{display:flex;align-items:center;gap:9px;font-size:13px;color:#54697e;margin:8px 0}
+.finding-marker-option input{width:18px;height:18px;flex:none}
+.finding-current-decision{padding:8px 0;font-size:13px;color:#48637a;overflow-wrap:anywhere}
+.finding-confidence-note{font-size:13px;line-height:1.45;color:#a3641e;background:#fff9eb;
+ border:1px solid #f0d8a8;border-radius:9px;padding:9px;margin:10px 0}
+.review-panel .action-grid button{white-space:normal;min-width:0}
+.queue-item b,.queue-item small{overflow-wrap:anywhere;word-break:break-word}
+
+.scale-review-advanced{margin-top:12px;padding:9px 0;border-top:1px solid #dbe5ed}
+.scale-review-advanced summary{font-size:13px;color:#315d7f;font-weight:600;cursor:pointer;min-height:36px;padding:6px 0}
+.scale-review-advanced[open] summary{margin-bottom:8px}
+
 #uploadDrawingDialog{width:min(600px,calc(100vw - 32px));max-height:88vh;overflow:auto;box-sizing:border-box;padding:24px;border:1px solid #cbd5e1;border-radius:16px;background:#fff;color:#1e293b}
 #uploadDrawingDialog::backdrop{background:rgba(15,23,42,.65)}
 .upload-dialog-heading,.upload-dialog-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.upload-dialog-heading h2{margin:0}.upload-dialog-heading button{font-size:24px}

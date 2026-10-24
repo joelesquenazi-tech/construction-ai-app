@@ -1,4 +1,4 @@
-# Easy drawing upload — Batch 3.14
+# Easy drawing upload — Batch 3.16
 
 Upload drawings is available directly in the drawing toolbar and Drawing Library. It opens the device file picker and a simple upload panel:
 
