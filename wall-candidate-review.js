@@ -55,7 +55,7 @@ function cleanup(){
  svg.replaceChildren();$('wallCandidateList').replaceChildren();
  $('wallCandidateResults').hidden=true;
  $('wallCandidateMagnifier').hidden=true;
- setEditing(false);
+ setEditing(false);window.dispatchEvent(new CustomEvent('construction-wall-rule-context',{detail:null}));
 }
 function setEditing(on){
  adding=on;
@@ -187,8 +187,20 @@ function updateCount(){
  $('wallCandidateCounts').textContent=
   c.confirmed+' confirmed in 2D · '+c.rejected+' rejected · '+c.pending+' awaiting review · '+c.manuallyAdded+' added manually';
 }
+
+function announceRuleContext(){
+ const item=allItems().find(x=>x.id===selected),project=window.constructionAIProjects?.current();
+ if(!item||!sourceFile||!drawingSize||!project){window.dispatchEvent(new CustomEvent('construction-wall-rule-context',{detail:null}));return;}
+ let sheet;try{sheet=JSON.parse(localStorage.getItem('construction-ai-sheet-library-v1')||'[]').find(x=>x.projectId===project.projectId&&x.roomId===project.roomId&&x.modelSourceKey==='floor')}catch{}
+ const source={project_id:project.projectId,room_id:project.roomId,sheet_id:sheet?.sheetId||'',revision:sheet?.revision||'',page:1,view_id:sheet?.viewId||'',filename:sourceFile.name||'',fingerprint:signature,image_width:drawingSize.width,image_height:drawingSize.height,coordinate_space:window.ConstructionDrawingImageSource.isPDF(sourceFile)?'rendered_pdf_page_pixels':'original_image_pixels'};
+ const a=item.points_px[0],b=item.points_px[1],bounds=[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[0],b[0]),Math.max(a[1],b[1])];
+ const evidence=item.evidence==='parallel_dark_line_pair'?[{id:item.id+':parallel-pair',candidate_id:item.id,kind:'parallel_pair',observed:true,source:{...source},bounds}]:[];
+ const decision=candidateStatus(item),manual=decision==='user_confirmed_2d'||decision==='rejected_non_wall'?{id:item.id,status:decision,classification:decision==='user_confirmed_2d'?'wall_candidate':'not_wall',reviewer:'Saved local 2D review',source:{...source}}:null;
+ window.dispatchEvent(new CustomEvent('construction-wall-rule-context',{detail:{candidate_id:item.id,domain:'line_purpose',source,evidence,manual_correction:manual}}));
+}
+
 function repaint(){
- paint();renderList();updateCount();updateButtons();updateManualControl();
+ paint();renderList();updateCount();updateButtons();updateManualControl();announceRuleContext();
 }
 function choose(id,{recenter=true}={}){
  if(adding)return;
