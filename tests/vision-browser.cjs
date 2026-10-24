@@ -21,7 +21,7 @@ const server=spawn('python3',['-u','-c',
    return route.continue();
   });
   await page.goto(`http://127.0.0.1:${port}/`);
-  await page.waitForFunction(()=>window.constructionAIUploadDrawing&&window.constructionAIGetVisionSource);
+  await page.waitForFunction(()=>window.constructionAIUploadDrawing&&window.constructionAIGetVisionSource&&document.querySelector('#sheetSelector').options.length>0);
   await page.evaluate(async()=>{
    const c=document.createElement('canvas');c.width=800;c.height=600;const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,800,600);ctx.fillStyle='black';ctx.fillRect(80,100,500,8);ctx.fillRect(80,120,500,8);
    const blob=await new Promise(r=>c.toBlob(r,'image/png'));
@@ -34,6 +34,7 @@ const server=spawn('python3',['-u','-c',
   await page.waitForFunction(()=>!document.getElementById('visionRun').disabled);
   await page.fill('#visionRevision','R1');await page.locator('#visionRun').focus();
   await page.click('#visionCheck');await page.waitForFunction(()=>document.getElementById('visionStatus').textContent.includes('Local model ready'));
+  await page.locator('#visionCanvas').scrollIntoViewIfNeeded();
   const bounds=await page.locator('#visionCanvas').boundingBox();
   await page.mouse.move(bounds.x+bounds.width*.25,bounds.y+bounds.height*.25);await page.mouse.down();
   await page.mouse.move(bounds.x+bounds.width*.75,bounds.y+bounds.height*.75);await page.mouse.up();
@@ -63,8 +64,10 @@ const server=spawn('python3',['-u','-c',
   await page.unroute('**/api/vision/analyze');
   await page.reload();await page.evaluate(()=>{window.constructionAIPreviewStartup('return');window.constructionAIShowTab('interpret')});
   await page.waitForFunction(()=>document.querySelector('#sheetSelector').options.length>1);
+  await page.evaluate(()=>window.constructionAIShowTab('library'));
   await page.selectOption('#sheetSelector',runs[0].source.sheetId);
   await page.waitForFunction(async expected=>(await window.constructionAIGetVisionSource())?.metadata.id===expected,runs[0].source.sheetId);
+  await page.evaluate(()=>window.constructionAIShowTab('interpret'));
   await page.click('#visionLoad');await page.waitForFunction(()=>!document.querySelector('#visionRun').disabled);
   await page.fill('#visionRevision','R1');await page.locator('#visionRun').focus();
   await page.selectOption('#visionHistory',runs[0].id);
