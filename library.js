@@ -79,5 +79,21 @@ window.addEventListener('construction-room-change',()=>activateRoom().catch(e=>$
 (async()=>{sheets=load();let changed=false;for(const item of sheets){if(!item.projectId){item.projectId='legacy-project';item.roomId='legacy-room';item.sheetId=item.id;changed=true}}if(!localStorage.getItem('construction-ai-library-migrated-v1')&&!sheets.some(s=>s.id==='A102')){sheets.unshift({id:'A102',sheetId:'A102',projectId:'legacy-project',roomId:'legacy-room',name:'Floor plan (legacy)',category:'Architectural',width:4480,height:3051,references:[]});changed=true}if(changed)persist();localStorage.setItem('construction-ai-library-migrated-v1','yes');try{await activateRoom();window.dispatchEvent(new Event('construction-library-ready'))}catch(err){$('libraryStatus').textContent='Local drawing storage unavailable: '+err.message;render()}})();
 $('drawingTypeFilter')?.addEventListener('change',render);
 $('selectedDrawingType')?.addEventListener('change',event=>{const item=sheets.find(x=>x.id===active);if(!item)return;const previous=item.drawingType;try{item.drawingType=event.target.value;persist();render();$('sheetSubtitle').textContent=typeLabel(drawingType(item))+' • Drawing preview • recognized text are not automatically verified';$('libraryStatus').textContent='Drawing labeled '+typeLabel(drawingType(item))+'.'}catch(error){item.drawingType=previous;render();$('libraryStatus').textContent='Could not save label: '+error.message}});
-$('sheetSearch')?.addEventListener('input',render);$('sheetFilter')?.addEventListener('change',render);window.constructionAIWaitForDrawingSave=()=>pendingSave;
+$('sheetSearch')?.addEventListener('input',render);$('sheetFilter')?.addEventListener('change',render);
+window.constructionAIGetPdfTextSource=async sheetId=>{
+ const item=sheets.find(x=>x.id===sheetId&&projects()?.belongs(x));
+ if(!item||!item.pdfSourceKey)return null;
+ const original=await transaction('readonly',store=>store.get(item.pdfSourceKey));
+ if(!original||!window.constructionAIPdf.isPdf(original))
+  throw Error('Original PDF not available in local storage. Re-import this PDF sheet.');
+ if(!Number.isSafeInteger(item.width)||!Number.isSafeInteger(item.height)||
+    !Number.isSafeInteger(item.pdfPage)||item.pdfPage<1)
+  throw Error('PDF preview page/dimensions are missing. Re-import the drawing.');
+ return {
+  file:original,page:item.pdfPage,expectedPixels:{width:item.width,height:item.height},
+  scope:{projectId:item.projectId,roomId:item.roomId},
+  sheetId:item.id
+ };
+};
+window.constructionAIWaitForDrawingSave=()=>pendingSave;
 })();
