@@ -46,7 +46,7 @@ function textBox(item,viewport,width,height){
 }
 function nativeFindings(raw,sheetId,limit=3000){
  if(!raw||!Array.isArray(raw.items)||!Array.isArray(raw.transform)||
-    !Number.isSafeInteger(raw.width)||!Number.isSafeInteger(raw.height)||
+    !Number.isSafeInteger(raw.width)||raw.width<1||!Number.isSafeInteger(raw.height)||raw.height<1||
     typeof sheetId!=='string'||!sheetId||
     !Number.isSafeInteger(limit)||limit<1||limit>10000)
   throw Error('Invalid PDF text extraction result');
