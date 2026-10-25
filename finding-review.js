@@ -22,7 +22,7 @@ function confidence(value){
  return Number.isFinite(n)?Math.max(0,Math.min(100,n)).toFixed(1)+'%':'Unknown';
 }
 function needsCare(value){
- if(value===null||value===undefined||value==='')return false;
+ if(value===null||value===undefined||value==='')return true;
  return !Number.isFinite(Number(value))||Number(value)<60;
 }
 return {nextPending,confidence,needsCare};
