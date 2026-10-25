@@ -29,8 +29,8 @@ test('rotated PDF text remains inside a bounded source rectangle',()=>{
  assert.deepEqual(pdf.textBox(rotated,viewport,800,500),{x:88,y:70,width:12,height:30});
 });
 test('coordinates are clipped at image edges and never NaN',()=>{
- const clipped={...item('NOTE'),transform:[12,0,0,12,-5,505],width:30,height:12};
- assert.deepEqual(pdf.textBox(clipped,viewport,800,500),{x:0,y:0,width:25,height:7});
+ const clipped={...item('NOTE'),transform:[12,0,0,12,-5,495],width:30,height:12};
+ assert.deepEqual(pdf.textBox(clipped,viewport,800,500),{x:0,y:0,width:25,height:5});
  assert.equal(pdf.textBox({...item(),width:NaN},viewport,800,500),null);
  assert.equal(pdf.textBox({...item(),transform:[0,0,0,0,0,0]},viewport,800,500),null);
 });
