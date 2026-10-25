@@ -43,8 +43,8 @@ test('native PDF text is review-only, with no fake OCR confidence',()=>{
  assert.equal(review.confidence(null),'Not measured');
  assert.equal(review.confidence(undefined),'Not measured');
  assert.equal(review.confidence(''),'Not measured');
- assert.equal(review.needsCare(null),false);
- assert.equal(review.needsCare(undefined),false);
+ assert.equal(review.needsCare(null),true);
+ assert.equal(review.needsCare(undefined),true);
  assert.equal(review.confidence(24.348),'24.3%');
  assert.equal(review.needsCare(24.348),true);
 });
