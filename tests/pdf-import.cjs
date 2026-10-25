@@ -31,6 +31,20 @@ const server=https.createServer({key:fs.readFileSync(temp+'/key'),cert:fs.readFi
  await page.waitForFunction(()=>document.querySelector('#libraryStatus').textContent.includes('2 PDF page(s) saved'));console.log('PDF rendered');
  await page.waitForFunction(()=>document.querySelector('#sheet').naturalWidth>0);
  const meta=await page.evaluate(()=>JSON.parse(localStorage.getItem('construction-ai-sheet-library-v1')));const pages=meta.filter(x=>x.sheetId.startsWith('PDFTEST'));assert.equal(pages.length,2);assert.deepEqual(pages.map(x=>x.pdfPage),[1,2]);assert.equal(pages[0].width,2400);assert.equal(pages[0].height,1600);assert.equal(pages[0].pdfSourceKey,pages[1].pdfSourceKey);
+ // Source-text regression: native PDF extraction must align to the same local
+ // rendered pixel space, preserving source text without image OCR or network.
+ const native=await page.evaluate(async(id)=>{
+  const source=await window.constructionAIGetPdfTextSource(id);
+  const raw=await window.constructionAIPdf.extractText(source.file,source.page,source.expectedPixels);
+  const items=window.ConstructionPDFText.nativeFindings(raw,id);
+  return {text:items.map(x=>x.text),size:[raw.width,raw.height],
+    pointsValid:items.every(x=>x.x>=0&&x.y>=0&&x.x+x.bbox.width<=raw.width
+      &&x.y+x.bbox.height<=raw.height),confidence:items[0]?.confidence};
+ },pages[0].id);
+ assert.ok(native.text.some(text=>text.includes('SYNTHETIC FIRST PAGE')));
+ assert.deepEqual(native.size,[pages[0].width,pages[0].height]);
+ assert.ok(native.pointsValid);
+ assert.equal(native.confidence,null);
  assert.equal(await page.evaluate(()=>localStorage.getItem('construction-ai-batch1-v1')),saved);
  const source=await page.evaluate(async key=>{const r=indexedDB.open('construction-ai-private-drawings',1);return await new Promise(resolve=>r.onsuccess=()=>{const db=r.result,req=db.transaction('images').objectStore('images').get(key);req.onsuccess=async()=>{resolve({type:req.result.type,text:(await req.result.text()).slice(0,4)});db.close()}})},pages[0].pdfSourceKey);assert.equal(source.text,'%PDF');
  await page.selectOption('#sheetSelector',pages[1].id);await page.waitForFunction(id=>document.querySelector('#sheetSelector').value===id&&document.querySelector('#sheetTitle').textContent.includes('P2'),pages[1].id);
@@ -40,6 +54,13 @@ const server=https.createServer({key:fs.readFileSync(temp+'/key'),cert:fs.readFi
  await page.fill('#newSheetId','RANGE');await page.fill('#pdfPages','2');await page.locator('#newSheetFile').setInputFiles(temp+'/two.pdf');await page.click('#addSheetForm button[type=submit]');await page.waitForFunction(()=>document.querySelector('#libraryStatus').textContent.includes('1 PDF page(s) saved'));
  // Offline module/worker/font use in a fresh document, not just previously imported PNGs.
  await context.setOffline(true);await page.reload();if(await page.locator('#workspaceContinue').isVisible())await page.click('#workspaceContinue');await page.evaluate(()=>{window.constructionAIShowTab('library');document.getElementById('advancedDrawingImport').open=true});await page.fill('#newSheetId','OFFLINE');await page.fill('#pdfPages','1');await page.locator('#newSheetFile').setInputFiles(temp+'/two.pdf');await page.click('#addSheetForm button[type=submit]');await page.waitForFunction(()=>document.querySelector('#libraryStatus').textContent.includes('1 PDF page(s) saved'));
+ // Native PDF text must also work with airplane-mode cached assets.
+ const offlineText=await page.evaluate(async(id)=>{
+  const source=await window.constructionAIGetPdfTextSource(id);
+  const raw=await window.constructionAIPdf.extractText(source.file,source.page,source.expectedPixels);
+  return window.ConstructionPDFText.nativeFindings(raw,id).map(x=>x.text);
+ },pages[0].id);
+ assert.ok(offlineText.some(text=>text.includes('SYNTHETIC FIRST PAGE')));
  await page.reload();if(await page.locator('#workspaceContinue').isVisible())await page.click('#workspaceContinue');await page.evaluate(()=>{window.constructionAIShowTab('library');document.getElementById('advancedDrawingImport').open=true});await page.selectOption('#sheetSelector',pages[0].id);await page.waitForFunction(()=>document.querySelector('#sheet').naturalWidth>0);assert.equal(await page.evaluate(()=>localStorage.getItem('construction-ai-batch1-v1')),saved);
  const legacySize=await page.evaluate(()=>new Promise(resolve=>{const req=indexedDB.open('construction-ai-private-drawings',1);req.onsuccess=()=>{const db=req.result,get=db.transaction('images').objectStore('images').get('A102');get.onsuccess=()=>{resolve(get.result.size);db.close()}}}));assert.equal(legacySize,fs.statSync(root+'/icons/icon-192.png').size);
  assert.deepEqual(external,[]);assert.deepEqual(errors,[]);console.log('PASS: two-page PDF rendered to separate sheets; page range; local original retained; saved reviews/records preserved; malformed/password PDF errors leave library unchanged; offline PDF import and reload; no external requests/page errors. Chromium iPad emulation, not Safari.');

@@ -78,5 +78,44 @@
       throw error;
     } finally { await task.destroy(); }
   }
-  window.constructionAIPdf = { isPdf, prepare };
+  async function extractText(file, number, expectedPixels) {
+    if (!isPdf(file)) throw Error('Select a local PDF source to extract embedded text.');
+    if (!Number.isSafeInteger(number) || number < 1) throw Error('Invalid PDF page.');
+    if (file.size > 40 * 1024 * 1024) throw Error('Choose a PDF no larger than 40 MB.');
+    if (!window.ConstructionPDFText?.nativeFindings)
+      throw Error('Local PDF text positioning tools are unavailable; refresh the app.');
+    const pdfjs=await loadEngine();
+    const task=pdfjs.getDocument({
+      data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,
+      useWorkerFetch:false,BinaryDataFactory:LocalBinaryData,
+      standardFontDataUrl:new URL('standard_fonts/',root).href,
+      wasmUrl:new URL('wasm/',root).href,
+      enableXfa:false,stopAtErrors:true
+    });
+    task.onPassword=()=>task.destroy();
+    try {
+      const doc=await task.promise;
+      if (number>doc.numPages) throw Error('Requested page exceeds PDF length.');
+      const page=await doc.getPage(number);
+      try {
+        const natural=page.getViewport({scale:1});
+        const scale=Math.min(2400/Math.max(natural.width,natural.height),
+          Math.sqrt(4000000/(natural.width*natural.height)));
+        const viewport=page.getViewport({scale});
+        const width=Math.ceil(viewport.width),height=Math.ceil(viewport.height);
+        // The text boxes must refer to the EXACT locally rendered page size.
+        if(expectedPixels&&(width!==expectedPixels.width||height!==expectedPixels.height))
+          throw Error('Rendered PDF page dimensions changed. Re-import the drawing before scanning.');
+        const content=await page.getTextContent({
+          includeMarkedContent:false,disableNormalization:false
+        });
+        return {
+          items:content.items.filter(item=>item&&typeof item.str==='string'),
+          transform:viewport.transform,
+          width,height,page:number,pageCount:doc.numPages
+        };
+      } finally {page.cleanup()}
+    } finally {await task.destroy()}
+  }
+  window.constructionAIPdf = { isPdf, prepare, extractText };
 })();
