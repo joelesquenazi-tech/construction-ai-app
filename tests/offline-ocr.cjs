@@ -1,0 +1,20 @@
+// Real English OCR with browser network offline after service-worker installation.
+const {chromium}=require('playwright');
+const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict');
+const root=path.resolve(__dirname,'..');
+const types={'.js':'text/javascript','.mjs':'text/javascript','.wasm':'application/wasm','.css':'text/css','.html':'text/html','.json':'application/json'};
+const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req.url,'http://localhost').pathname==='/'?'index.html':decodeURIComponent(new URL(req.url,'http://localhost').pathname));try{res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(fs.readFileSync(file))}catch{res.writeHead(404).end()}});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;const deadline=setTimeout(()=>{console.error('Offline OCR test exceeded 150 seconds');process.exit(1)},150000);
+try{browser=await chromium.launch();const context=await browser.newContext();const page=await context.newPage(),external=[];page.setDefaultTimeout(120000);
+page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:')&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url())});
+await page.goto('http://127.0.0.1:'+server.address().port+'/');
+await page.evaluate(async()=>{await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(r=>navigator.serviceWorker.addEventListener('controllerchange',r,{once:true}))});
+await context.setOffline(true);
+await page.reload();await page.waitForFunction(()=>window.constructionAIUploadDrawing&&document.querySelector('#sheetSelector').options.length);
+await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=1400;c.height=300;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,1400,300);x.fillStyle='black';x.font='bold 64px Arial';x.fillText('PRIMARY BEDROOM 12 FEET',40,150);const blob=await new Promise(r=>c.toBlob(r));await window.constructionAIUploadDrawing(new File([blob],'synthetic-text.png',{type:'image/png'}),{drawingType:'floor-plan'});window.constructionAIPreviewStartup('return');window.constructionAIShowTab('drawings')});
+page.on('dialog',d=>d.accept());
+await page.click('#scanDrawing');await page.waitForFunction(()=>document.getElementById('scanStatus').textContent.includes('unverified image OCR findings saved'),null,{timeout:120000});
+const findings=await page.evaluate(()=>{const id=document.getElementById('sheetSelector').value;return JSON.parse(localStorage.getItem('construction-ai-sheet-findings-v1'))[id]});
+assert.match(findings.map(f=>f.text).join(' '),/PRIMARY BEDROOM/);assert(findings.every(f=>f.status==='pending'&&f.source_kind==='raster_ocr'));assert.deepEqual(external,[]);
+console.log('PASS: real bundled OCR after offline reload, English fixture recognized, no external requests, results unverified.');
+}finally{clearTimeout(deadline);await browser?.close();await new Promise(r=>server.close(r))}})().catch(e=>{console.error(e);server.close();process.exitCode=1});

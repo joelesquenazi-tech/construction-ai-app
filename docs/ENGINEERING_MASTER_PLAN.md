@@ -468,3 +468,11 @@ Define a versioned, dependency-free feature catalog and JSON instance schema wit
 - Added source-aligned PDF viewport text transform tests (horizontal/rotated/clipped/invalid) and a synthetic-PDF optional browser smoke test that checks original PDF bytes/text without an external call; no private client drawing is used in tests.
 - Preserves source hierarchy **project drawings, details and specs → project owner/architect conventions → reviewed general USACE/VA clue rules**. Text extraction is not dimension association, classification, code approval or automatic 3D geometry.
 - **Next batch:** package offline local OCR workers/models and benchmark text accuracy from sample approved raster/PDF elevations; associate labels with geometry and rule evidence, while retaining per-value source provenance. Add explicit review explanations when rule hypotheses conflict with the project legend. See `docs/PDF_TEXT_FIRST.md`.
+
+## Progress log — 2026-10-28 — Offline OCR packaging candidate (Stage 1)
+
+- Packages pinned Tesseract.js 5.1.1, core 5.1.1 with all WASM variants, and compressed English data locally. Worker, core and language paths explicitly use same-origin bundled assets. Removes runtime CDN initialization and its internet-consent prompt; native PDF text remains the preferred route.
+- Service-worker version advances; installation caches the complete OCR bundle atomically. Missing local assets must fail visibly instead of falling back to internet hosts. Existing finding-replacement review and source/room checks are retained.
+- Node regressions pass. Adds a real-model Chromium test: install app, turn browser network offline, reload, import synthetic raster, run OCR and assert recognized text/pending results and no external requests. This real offline OCR browser test passed locally on Chromium: the fixture text was recognized after offline reload with no external requests. GitHub CI has not run for this batch.
+- Approximately 41 MB added to installation. Physical iPad Safari and Raspberry Pi performance, storage eviction recovery, and representative real-drawing accuracy remain OPEN. Vision inference/PR #54 is separate and remains a draft.
+- Next: measure OCR on permitted raster/elevation fixtures and bind text/dimension evidence to source geometry; do not promote text extraction to verified scale or 3D geometry.
