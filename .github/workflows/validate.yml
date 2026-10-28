@@ -18,3 +18,14 @@ jobs:
           for file in *.js; do node --check "$file"; done
       - name: Construction geometry and scale evidence unit tests
         run: node --test tests/*.test.cjs
+  offline-ocr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/offline-ocr.cjs

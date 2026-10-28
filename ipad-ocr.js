@@ -1,6 +1,6 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),KEY='construction-ai-scan-history-v1';
-const CDN='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const OCR_BASE=new URL('./vendor/tesseract/',document.baseURI).href;
 const dimension=/\d+\s*['′″"]|\d+\s*\/\s*\d+|\b(?:AFF|TYP|EQ)\b/i;
 const sheetRef=/\b(?:A|S|M|E|P|ID)[- ]?\d{2,4}(?:\.\d+)?\b/i;
 const room=/\b(?:ROOM|BEDROOM|BATHROOM|KITCHEN|CORRIDOR|OFFICE|DINING|CLOSET|LOBBY|GARAGE|LIVING|MECHANICAL|LAUNDRY|GYM)\b/i;
@@ -8,7 +8,7 @@ const type=t=>dimension.test(t)?'dimension':sheetRef.test(t)?'sheet-reference':r
 let busy=false;
 function matches(text){let rules=[];try{rules=JSON.parse(localStorage.getItem('construction-ai-knowledge-v1')||'[]')}catch{};return(Array.isArray(rules)?rules:[]).filter(r=>r.status==='verified'&&String(r.title||'').split(/\s+/).filter(w=>w.length>3).some(w=>text.toLowerCase().includes(w.toLowerCase()))).slice(0,5).map(r=>({id:r.id,title:r.title,value:r.value,scope:r.scope,source:r.source||'',status:'suggestion-only'}))}
 function remember(id,items,engine='tesseract.js 5.1.1'){try{const all=JSON.parse(localStorage.getItem(KEY)||'{}');all[id]={scannedAt:new Date().toISOString(),count:items.length,engine,types:items.reduce((a,x)=>(a[x.kind]=(a[x.kind]||0)+1,a),{})};localStorage.setItem(KEY,JSON.stringify(all))}catch{}}
-function loadScript(){if(window.Tesseract?.createWorker)return Promise.resolve();return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=CDN;s.onload=()=>window.Tesseract?.createWorker?resolve():reject(Error('text recognition software did not initialize'));s.onerror=()=>reject(Error('text recognition software download failed; connect to internet to initialize OCR'));document.head.append(s)})}
+function loadScript(){if(window.Tesseract?.createWorker)return Promise.resolve();return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=OCR_BASE+'tesseract.min.js';s.onload=()=>window.Tesseract?.createWorker?resolve():reject(Error('text recognition software did not initialize'));s.onerror=()=>reject(Error('Local text recognition files unavailable. Finish installing/updating the app while online, then try again'));document.head.append(s)})}
 function imageBlob(id){return new Promise((resolve,reject)=>{const req=indexedDB.open('construction-ai-private-drawings',1);req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tx=db.transaction('images','readonly'),get=tx.objectStore('images').get(id);get.onsuccess=()=>{db.close();resolve(get.result)};get.onerror=()=>{db.close();reject(get.error)}}})}
 async function scan(){
  if(busy)return;
@@ -45,24 +45,17 @@ async function scan(){
       ' native PDF text items saved for review. No OCR download or image upload was needed. Text position and meaning are unverified.';
     return;
    }
-   status.textContent='No usable selectable text in this PDF page. Image OCR is optional and currently needs downloaded software.';
+   status.textContent='No usable selectable text in this PDF page. Image OCR will use the bundled local English recognition files.';
   }
-  // Raster-only page (or a scanned PDF without an embedded text layer).
-  // First-run Tesseract.js assets are currently loaded from a third-party CDN.
-  // The *drawing* is still processed locally but completely offline OCR has
-  // NOT been implemented; do not silently imply otherwise.
-  if(!confirm('This drawing requires image OCR. Current Tesseract.js OCR may download software and English language data from the internet; drawing pixels are processed on this device. Continue?')){
-   status.textContent='Image OCR cancelled. Existing findings are unchanged.';
-   return;
-  }
+  // All OCR software, WASM variants, and English data are packaged locally.
   let blob=await imageBlob(id);
   if(window.constructionAIPdf.isPdf(blob))
    blob=(await window.constructionAIPdf.prepare(blob,'1'))[0].blob;
   if(!blob){status.textContent='Import a JPG, PNG or PDF drawing for '+id+' first.';return}
   if(!stillHere())throw Error('Drawing or room changed during analysis. Run Scan again.');
-  status.textContent='Preparing Tesseract image OCR. First run may download recognition components…';
+  status.textContent='Preparing local image text recognition…';
   await loadScript();
-  worker=await window.Tesseract.createWorker('eng',1,{logger:m=>{
+  worker=await window.Tesseract.createWorker('eng',1,{workerPath:OCR_BASE+'worker.min.js',corePath:OCR_BASE+'core/',langPath:OCR_BASE+'lang/',workerBlobURL:false,logger:m=>{
    if(m.status)status.textContent='Image OCR: '+m.status+
     (typeof m.progress==='number'?' '+Math.round(m.progress*100)+'%':'');
   }});
