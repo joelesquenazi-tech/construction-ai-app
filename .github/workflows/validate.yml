@@ -18,3 +18,5 @@ jobs:
           for file in *.js; do node --check "$file"; done
       - name: Construction geometry and scale evidence unit tests
         run: node --test tests/*.test.cjs
+      - name: Stage 0 synthetic wall accuracy baseline (includes expected detector limitations)
+        run: node tools/run-wall-baseline.cjs

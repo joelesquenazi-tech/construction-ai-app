@@ -1,0 +1,2 @@
+# Private benchmark inputs and reports stay local. Never commit project drawings.
+/local-benchmarks/
