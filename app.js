@@ -6,9 +6,39 @@ const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({...state,findings:activeSheet==='A102'?state.findings:(JSON.parse(localStorage.getItem(KEY)||'null')?.findings||structuredClone(window.INITIAL_FINDINGS))}));return true}catch(e){alert('Local saving failed. Export a backup instead. '+e.message);return false}};
 let selected=null,filter='all',scale=1,tx=0,ty=0;
 let lastReviewAction=null;
+function currentDimensionEvidence(f){
+ const core=window.ConstructionDimensionEvidence,e=f?.dimension_evidence;
+ if(!core||!e||f.status==='rejected'||(f.correction&&f.correction.trim()!==f.text.trim())||
+  !core.sameSource(f.source,window.constructionAIDimensionSource)||!core.validBox(e.label_box_px,W,H))return null;
+ return e;
+}
+function drawDimensionEvidence(host,f){
+ const e=currentDimensionEvidence(f);if(!e)return;
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+ svg.classList.add('dimension-evidence-overlay');svg.setAttribute('viewBox','0 0 '+W+' '+H);
+ svg.setAttribute('aria-label','Unverified measurement source box and possible dimension span');
+ svg.setAttribute('role','img');
+ const add=(name,attributes)=>{const n=document.createElementNS(ns,name);for(const [k,v]of Object.entries(attributes))n.setAttribute(k,String(v));n.setAttribute('vector-effect','non-scaling-stroke');svg.append(n)};
+ const b=e.label_box_px;add('rect',{x:b.x,y:b.y,width:b.width,height:b.height,fill:'none',stroke:'#087ef5','stroke-width':2});
+ const p=e.points_px;
+ if(e.association_status==='candidate_unverified'&&Array.isArray(p)&&p.length===2&&p.every(q=>Array.isArray(q)&&q.length===2&&q.every(Number.isFinite)&&q[0]>=0&&q[0]<=W&&q[1]>=0&&q[1]<=H)){
+  add('line',{x1:p[0][0],y1:p[0][1],x2:p[1][0],y2:p[1][1],stroke:'#ee7c13','stroke-width':3,'stroke-dasharray':'7 5'});
+  for(const point of p)add('circle',{cx:point[0],cy:point[1],r:5,fill:'#ee7c13',stroke:'white','stroke-width':1});
+ }
+ host.append(svg);
+}
+function dimensionDetails(f){
+ const e=f?.dimension_evidence;if(!e)return '';
+ const current=currentDimensionEvidence(f),s=f.source||{},metres=e.measurement?.metres;
+ const meaning={candidate_unverified:'Possible dimension span: two witness intersections found; association remains unverified.',ambiguous:'Several dimension spans are plausible. No endpoints were selected.',unassociated:'Measurement reading only. No supported dimension span was found.'}[e.association_status]||'Unverified measurement proposal.';
+ return '<div class="field dimension-evidence-detail"><small>Measurement evidence · original reading</small><b>'+esc(typeof metres==='number'&&Number.isFinite(metres)?Number(metres.toPrecision(8))+' m':'Unresolved reading')+'</b><p>'+esc(meaning)+'</p><p>'+esc(s.sheet||s.sheet_id||'Unknown sheet')+' · page '+esc(s.page??'unknown')+' · revision '+esc(s.revision??'unknown')+'</p><p>'+esc(current?'Blue box: source text. Orange dashed line: possible dimension span. Confirming the reading does not confirm its geometry.':'Overlay hidden: this reading is rejected/corrected, or its exact source has changed or is still being checked. Rescan the current drawing before using dimension evidence.')+'</p></div>';
+}
+window.addEventListener('construction-dimension-source-ready',()=>{
+ markers();const host=$('dimensionEvidenceDetails');if(host)host.innerHTML=dimensionDetails(state.findings.find(f=>f.id===selected));
+});
 const reviewLogic=window.ConstructionFindingReview;const saveSheet=()=>{if(activeSheet==='A102')return save();const before=perSheet[activeSheet];perSheet[activeSheet]=state.findings;try{localStorage.setItem(SHEET_KEY,JSON.stringify(perSheet));return true}catch(e){if(before===undefined)delete perSheet[activeSheet];else perSheet[activeSheet]=before;alert('Review save failed: '+e.message);return false}};
 function counts(){$('total').textContent=state.findings.length;$('pending').textContent=state.findings.filter(f=>f.status==='pending').length;$('confirmed').textContent=state.findings.filter(f=>f.status==='confirmed').length}
-function markers(){const host=$('markers');host.innerHTML='';for(const f of state.findings){if(f.status==='rejected'&&f.id!==selected&&!$('showRejectedMarkers').checked)continue;const b=document.createElement('button');b.className='marker '+f.status+(f.id===selected?' active':'');b.style.left=f.x+'px';b.style.top=f.y+'px';b.textContent='?';b.title=`${f.text} — ${f.status}`;b.setAttribute('aria-label',`Review ${f.text}`);b.addEventListener('click',e=>{e.stopPropagation();select(f.id,false)});host.append(b)}}
+function markers(){const host=$('markers');host.innerHTML='';drawDimensionEvidence(host,state.findings.find(f=>f.id===selected));for(const f of state.findings){if(f.status==='rejected'&&f.id!==selected&&!$('showRejectedMarkers').checked)continue;const b=document.createElement('button');b.className='marker '+f.status+(f.id===selected?' active':'');b.style.left=f.x+'px';b.style.top=f.y+'px';b.textContent='?';b.title=`${f.text} — ${f.status}`;b.setAttribute('aria-label',`Review ${f.text}`);b.addEventListener('click',e=>{e.stopPropagation();select(f.id,false)});host.append(b)}}
 
 function showFindingFeedback(message,undo=false){
  const box=$('findingFeedback');
@@ -38,7 +68,7 @@ const possibleScale=f.text.includes('=');
 const fromPdf=f.source_kind==='pdf_embedded_text';
 const sourceName=fromPdf?'Embedded PDF text — not verified':'Original image OCR text (unchanged)';
 const confidenceLabel=fromPdf?'PDF text layer · confidence not measured':reviewLogic.confidence(f.confidence);
-const reliability=!fromPdf&&reviewLogic.needsCare(f.confidence)?'<p class="finding-confidence-note">Low OCR confidence. Compare the text with the actual drawing before confirming.</p>':'';$('detail').innerHTML=`<div class="finding-current-decision">Review status: <strong>${esc(f.status||"pending")}</strong></div><div class="field"><small>${esc(sourceName)}</small><div class="original">${esc(f.text)}</div></div><div class="field"><small>Rule suggestion — NOT verified</small><b>${esc(f.suggestion||'No reliable interpretation')}</b></div><div class="field"><small>Source method / pixel location</small><b>${esc(confidenceLabel)} · (${f.x}, ${f.y})</b></div>${reliability}<p class="warning">${possibleScale?'May be a drawing scale rather than a measurement. ':''}${esc(f.reason||'Candidate text; still requires human review.')}</p>${Array.isArray(f.knowledgeMatches)&&f.knowledgeMatches.length?'<div class="field"><small>Relevant verified knowledge (suggestions only)</small>'+f.knowledgeMatches.map(k=>'<p><b>'+esc(k.title)+'</b>: '+esc(k.value)+' · '+esc(k.scope)+'</p>').join('')+'</div>':''}<div class="field"><label>Corrected reading<input id="correction" placeholder="Enter only what you can verify" value="${esc(f.correction)}"></label><label>Review notes<textarea id="reviewNote" rows="3" placeholder="Reference related plan/detail">${esc(f.note)}</textarea></label></div><div class="action-grid"><button class="success" id="confirm">Confirm</button><button class="danger" id="reject">Reject</button><button id="saveReview">Save as pending</button><button id="clearReview">Clear decision</button></div><p class="notice">Confirmation records your review; it does not validate the drawing scale or create geometry.</p>`;
+const reliability=!fromPdf&&reviewLogic.needsCare(f.confidence)?'<p class="finding-confidence-note">Low OCR confidence. Compare the text with the actual drawing before confirming.</p>':'';$('detail').innerHTML=`<div class="finding-current-decision">Review status: <strong>${esc(f.status||"pending")}</strong></div><div class="field"><small>${esc(sourceName)}</small><div class="original">${esc(f.text)}</div></div><div class="field"><small>Rule suggestion — NOT verified</small><b>${esc(f.suggestion||'No reliable interpretation')}</b></div><div class="field"><small>Source method / pixel location</small><b>${esc(confidenceLabel)} · (${f.x}, ${f.y})</b></div>${reliability}<p class="warning">${possibleScale?'May be a drawing scale rather than a measurement. ':''}${esc(f.reason||'Candidate text; still requires human review.')}</p>${Array.isArray(f.knowledgeMatches)&&f.knowledgeMatches.length?'<div class="field"><small>Relevant verified knowledge (suggestions only)</small>'+f.knowledgeMatches.map(k=>'<p><b>'+esc(k.title)+'</b>: '+esc(k.value)+' · '+esc(k.scope)+'</p>').join('')+'</div>':''}<div class="field"><label>Corrected reading<input id="correction" placeholder="Enter only what you can verify" value="${esc(f.correction)}"></label><label>Review notes<textarea id="reviewNote" rows="3" placeholder="Reference related plan/detail">${esc(f.note)}</textarea></label></div><div id="dimensionEvidenceDetails">${dimensionDetails(f)}</div><div class="action-grid"><button class="success" id="confirm">Confirm</button><button class="danger" id="reject">Reject</button><button id="saveReview">Save as pending</button><button id="clearReview">Clear decision</button></div><p class="notice">Confirmation records your review; it does not validate the drawing scale or create geometry.</p>`;
 const persist=status=>{
  const previous={status:f.status,correction:f.correction,note:f.note};
  f.correction=$('correction').value.trim();f.note=$('reviewNote').value.trim();
@@ -71,7 +101,18 @@ $('zoomIn').onclick=()=>zoom(1.5);$('zoomOut').onclick=()=>zoom(1/1.5);$('zoomRe
 const vp=$('viewport');vp.addEventListener('wheel',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoom(e.deltaY<0?1.18:1/1.18,e.clientX-r.left,e.clientY-r.top)},{passive:false});
 const touches=new Map();let lastDist=null;vp.addEventListener('pointerdown',e=>{if(e.target.closest('.marker'))return;vp.setPointerCapture(e.pointerId);touches.set(e.pointerId,{x:e.clientX,y:e.clientY})});vp.addEventListener('pointermove',e=>{if(!touches.has(e.pointerId))return;const old=touches.get(e.pointerId);touches.set(e.pointerId,{x:e.clientX,y:e.clientY});const a=[...touches.values()];if(a.length===1){tx+=e.clientX-old.x;ty+=e.clientY-old.y;clamp();apply()}else if(a.length===2){const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(lastDist){const r=vp.getBoundingClientRect();zoom(d/lastDist,(a[0].x+a[1].x)/2-r.left,(a[0].y+a[1].y)/2-r.top)}lastDist=d}});function release(e){touches.delete(e.pointerId);lastDist=null}vp.addEventListener('pointerup',release);vp.addEventListener('pointercancel',release);
 window.constructionAISetSheet=id=>{activeSheet=id;const d=window.constructionAIActiveDimensions||{};W=d.width||4480;H=d.height||3051;const stage=$('drawingStage');stage.style.width=W+'px';stage.style.height=H+'px';const sheet=$('sheet');sheet.style.width=W+'px';sheet.style.height=H+'px';state.findings=id==='A102'?(JSON.parse(localStorage.getItem(KEY)||'null')?.findings||structuredClone(window.INITIAL_FINDINGS)):((perSheet=JSON.parse(localStorage.getItem(SHEET_KEY)||'{}'))[id]||[]);selected=null;lastReviewAction=null;showFindingFeedback('');render();requestAnimationFrame(fit)};
-window.constructionAIImportFindings=(id,findings)=>{if(id==='A102'){state.findings=findings;save()}else{perSheet[id]=findings;localStorage.setItem(SHEET_KEY,JSON.stringify(perSheet));if(id===activeSheet)state.findings=findings}selected=null;lastReviewAction=null;showFindingFeedback('');render()};
+window.constructionAIImportFindings=(id,findings)=>{
+ if(id==='A102'){
+  const previous=state.findings;state.findings=findings;
+  if(!save()){state.findings=previous;return false}
+ }else{
+  const previous=perSheet[id];perSheet[id]=findings;
+  try{localStorage.setItem(SHEET_KEY,JSON.stringify(perSheet))}
+  catch(error){if(previous===undefined)delete perSheet[id];else perSheet[id]=previous;throw error}
+  if(id===activeSheet)state.findings=findings;
+ }
+ selected=null;lastReviewAction=null;showFindingFeedback('');render();return true;
+};
 const form=$('recordForm');for(const [k,v] of Object.entries(state.records||{})){if(form.elements.namedItem(k))form.elements.namedItem(k).value=v}form.onsubmit=e=>{e.preventDefault();state.records=Object.fromEntries(new FormData(form).entries());if(save())$('saveMessage').textContent='Saved on this device'};
 $('export').onclick=()=>{const blob=new Blob([JSON.stringify({schema:'construction-ai-batch1',exportedAt:new Date().toISOString(),drawing:'A102',...state,findings:activeSheet==='A102'?state.findings:(JSON.parse(localStorage.getItem(KEY)||'null')?.findings||structuredClone(window.INITIAL_FINDINGS)),otherSheetFindings:perSheet},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='construction-ai-A102-review-backup.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('import').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(obj.schema!=='construction-ai-batch1'||!Array.isArray(obj.findings)||obj.findings.some(f=>typeof f.id!=='string'||typeof f.x!=='number'||typeof f.y!=='number'||!['pending','confirmed','rejected'].includes(f.status)))throw Error('Invalid backup format');if(!confirm('Replace reviews and records on this device with this backup?'))return;state={findings:obj.findings,records:obj.records&&typeof obj.records==='object'?obj.records:{}};if(obj.otherSheetFindings&&typeof obj.otherSheetFindings==='object'&&!Array.isArray(obj.otherSheetFindings)){perSheet=obj.otherSheetFindings;localStorage.setItem(SHEET_KEY,JSON.stringify(perSheet))}save();location.reload()}catch(err){alert('Import failed: '+err.message)}};
