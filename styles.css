@@ -505,3 +505,26 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .dimension-evidence-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .dimension-evidence-detail{border:1px solid #c5d8eb;border-radius:9px;padding:10px;background:#f3f8fe;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .dimension-evidence-detail p{margin:8px 0 0}
+
+/* Optional source-only accuracy check; local annotations use original pixels. */
+.dimension-check-intake{padding:14px;border-top:1px solid #dce6f2;font-size:13px}
+.dimension-check-intake p{line-height:1.5;max-width:75ch}
+.dimension-check-dialog{width:min(1100px,calc(100vw - 20px));max-height:94vh;overflow:auto;border:1px solid #b9cde3;border-radius:14px;padding:18px;color:#1c304c;background:#fff}
+.dimension-check-dialog::backdrop{background:#07172dbd}
+.dimension-check-heading,.dimension-check-actions,.dimension-check-zoom{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}
+.dimension-check-heading{justify-content:space-between}.dimension-check-heading h2{margin:0}
+.dimension-check-dialog p{font-size:13px;line-height:1.5}.dimension-check-dialog button{min-height:44px}
+.dimension-check-dialog button:disabled{opacity:.45;cursor:default}
+.dimension-check-viewport{max-height:52vh;min-height:220px;overflow:auto;border:1px solid #c4d4e5;overscroll-behavior:contain;background:#eaf0f7}
+.dimension-check-stage{position:relative;width:100%;line-height:0}
+.dimension-check-stage img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-select:none}
+.dimension-check-stage svg{position:absolute;inset:0;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.dimension-check-fields{display:flex;flex-wrap:wrap;gap:12px}.dimension-check-fields>*{flex:1;min-width:110px}
+.dimension-check-fields input,.dimension-check-fields select,.dimension-check-editor select{width:100%;min-height:44px;padding:8px;border:1px solid #c3d4e7;border-radius:8px;background:#fff;color:#1c304c}
+.dimension-check-dialog fieldset,.dimension-check-editor{margin:14px 0;padding:14px;border:1px solid #c4d4e5;border-radius:9px}
+.dimension-check-dialog label{display:block;margin:10px 0;font-size:13px;line-height:1.5}
+.dimension-check-dialog input[type=checkbox]{width:22px;height:22px;vertical-align:middle;margin-right:7px}
+.dimension-check-dimensions>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #dce6f2;padding:7px 0}
+.dimension-check-results{background:#f0f7fe;border-radius:9px;padding:0 12px}
+#dimensionCheckStatus{min-height:2em;color:#264e77}
+#dimensionCheckDialog [hidden]{display:none!important}
