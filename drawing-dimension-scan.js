@@ -32,8 +32,8 @@ async function enrich(findings,snapshot){
  try{
   await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Unable to read the local drawing raster.'));image.src=url});
   if(image.naturalWidth!==snapshot.source.width_px||image.naturalHeight!==snapshot.source.height_px)throw Error('Drawing pixel dimensions changed; re-import this source.');
-  const scale=Math.min(1,1800/Math.max(image.naturalWidth,image.naturalHeight));
-  canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const size=core.analysisSize(image.naturalWidth,image.naturalHeight);
+  canvas.width=size.width;canvas.height=size.height;
   const ctx=canvas.getContext('2d',{willReadFrequently:true});
   ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);
   const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,rows=[];

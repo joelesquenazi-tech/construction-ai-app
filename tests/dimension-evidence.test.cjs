@@ -74,6 +74,6 @@ test('unrelated text preserves review decisions and obtains provenance without d
  assert.equal(out.status,'rejected');assert.equal(out.dimension_evidence,undefined);assert.equal(out.source.page,1);
 });
 test('unbounded and malformed rasters are rejected',()=>{
- assert.throws(()=>core.segments([]),/bounded/);assert.throws(()=>core.segments([new Uint8Array(1801)]),/bounded/);
+ assert.throws(()=>core.segments([]),/bounded/);assert.throws(()=>core.segments([new Uint8Array(2401)]),/bounded/);
  assert.throws(()=>core.segments([new Uint8Array(20),new Uint8Array(19)]),/bounded/);
 });

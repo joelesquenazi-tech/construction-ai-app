@@ -4,7 +4,7 @@ Target: Stage 0 evaluation tooling and the Stage 1 text-to-line association prot
 
 ## Hypothesis and workflow
 
-An explicit measurement label, its original-page text box, and a nearby straight line with two perpendicular witness intersections can form a useful **unverified dimension proposal**. These marks can also occur in non-dimension linework. The software does not establish their architectural meaning, view ownership, scale, or construction geometry.
+An explicit measurement label, its original-page text box, and a nearby straight line with two supported endpoint markers (witness intersections or diagonal ticks) can form a useful **unverified dimension proposal**. These marks can also occur in non-dimension linework. The software does not establish their architectural meaning, view ownership, scale, or construction geometry.
 
 1. Upload a drawing and select its sheet in **Drawings**.
 2. Choose **Scan drawing**. Embedded PDF text is preferred; scanned pages use the bundled English OCR.
@@ -20,12 +20,12 @@ No calibration, wall review, or 3D store is changed by this scan. The ordinary w
 - Raster OCR now retains bounding rectangles, as native PDF text already does. PDF text-layer confidence remains `null` rather than a fabricated OCR score.
 - The parser accepts whole labels with explicit feet/inches, mixed fractions through 1/64 inch, common Unicode fractions, and `mm`, `cm`, or `m`. It preserves the printed reading and records metres separately.
 - Bare numbers, scale equations, AFF/datums, radius/diameter labels, mixed notes, unsupported fractions, and several dimensions in one text item are not interpreted as standalone linear measurements.
-- Raster line processing is bounded to 1,800 pixels per side and 250 measurement association attempts. Endpoints map back independently in both axes to the original page pixels.
-- Horizontal/vertical spans may be continuous or interrupted by their own label. Both endpoints must have perpendicular crossing evidence. Skewed/diagonal dimensions, arrowhead-only endpoints, graphic scales, and PDF vector path interpretation are not supported by this batch.
+- Raster line processing is bounded to 4.2 million pixels, 2,400 pixels per side, 250 measurement association attempts and one million endpoint-search positions. Endpoints map back independently in both axes to the original page pixels.
+- Horizontal/vertical spans may be continuous or interrupted by their own label. Both endpoints require supported crossing/tick evidence. Chains use consecutive markers; compact pixel marks are explicitly flagged for source review. Skewed/diagonal dimensions, arrowhead-only endpoints, graphic scales, and PDF vector path interpretation are not supported by this batch.
 
 | Association status | Meaning |
 | --- | --- |
-| `candidate_unverified` | One plausible span with two witness crossings; interpretation needs review. |
+| `candidate_unverified` | One plausible span with two supported endpoint markers; interpretation needs review. |
 | `ambiguous` | Several plausible spans; no endpoints selected. Up to five alternatives retained. |
 | `unassociated` | A measurement reading exists, but no supported unique span was found, a bound was reached, or a text box is missing. |
 
@@ -86,6 +86,8 @@ The report separates reading and span true/false positives, false negatives, pre
 - Node unit/regression checks cover units, invalid labels, source identity, line association, ambiguity, independent coordinate scaling, matching, duplicate predictions, omissions, annotation coverage, and human-correction isolation.
 - Real bundled OCR browser test: install, disconnect browser network, reload, import synthetic raster, recognize `12 FEET`, recover expected witness endpoints within three original pixels, inspect overlay, correct/Undo, reopen the saved sheet after reload. No external requests.
 - Synthetic native-PDF browser test: page 2 text and provenance, null OCR confidence, local span association, unchanged calibration/wall stores, replaced-source overlay suppression, and discarded late OCR after replacement with the exact same filename, dimensions and last-modified value.
-- The browser tests use Chromium. Physical iPad Safari, Raspberry Pi timing/memory, representative permitted drawing accuracy, and agreed real-project tolerances remain OPEN. There is no real-drawing precision/recall claim.
+- The browser tests use Chromium. Physical iPad Safari, Raspberry Pi timing/memory, representative permitted drawing accuracy, and agreed real-project tolerances remain OPEN. A two-label private development pilot is described in ENDPOINT_ASSOCIATION_V2.md; it is not a representative real-drawing accuracy claim.
 
 Next gate: independently annotate an explicit region on a permitted real sheet, score it locally, inspect omissions and false matches, then improve extraction and view ownership. Independent scale confirmation, plan/elevation registration, and drawing-derived verified 3D remain later gates.
+
+Endpoint-marker version 2, its limits and before/after pilot evidence are documented in [ENDPOINT_ASSOCIATION_V2.md](ENDPOINT_ASSOCIATION_V2.md).

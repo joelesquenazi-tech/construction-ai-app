@@ -31,3 +31,4 @@ jobs:
       - run: node tests/offline-ocr.cjs
       - run: node tests/dimension-source-browser.cjs
       - run: node tests/dimension-check-browser.cjs
+      - run: node tests/dimension-chain-browser.cjs
