@@ -15,6 +15,12 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 7. Prove one room end to end, then scale to floors/buildings and MEP.
 8. No automatic RFI submission; only flag possible coordination/RFI needs.
 
+## Response-time priority — approved direction, 2026-11-02
+
+Responsiveness is a release requirement. Heavy vision/reconstruction must not be assumed to run interactively on an iPad, Raspberry Pi or a particular desktop GPU. Prefer fast local viewing, editing and extraction, with interchangeable background inference on a workstation or operator-controlled GPU server. Evaluate an explicitly approved managed service as an optional route using nonconfidential fixtures first; no private drawing upload or provider commitment is authorized by this roadmap amendment.
+
+Use staged, source-linked results, bounded jobs, incremental reprocessing and versioned caching. Model responses remain proposals; deterministic checks and superintendent review govern verification. Timing targets, benchmark protocol, privacy boundaries and reordered work are in [RESPONSIVE_PROCESSING_PLAN.md](RESPONSIVE_PROCESSING_PLAN.md). These are planned requirements, not measured performance claims. This amendment supersedes any earlier assumption that heavy local inference is the normal interactive path; provider independence and essential offline access remain requirements.
+
 ## Development stages and exit gates
 ### Stage 0 — Baseline and test corpus
 - **Planned feature-checklist fixtures:** include documented/missed/partial coves, tray ceilings, soffits, ceiling and base reveals, duplicate instances, multiple profiles, source revisions, and expected host-component changes. Ground truth must cover feature presence, provenance, geometry, and negative/unknown cases.
@@ -509,3 +515,14 @@ Define a versioned, dependency-free feature catalog and JSON instance schema wit
 - Synthetic tests cover horizontal/vertical chains, both tick slopes, extension lines, stroke thickness, short spans, ambiguity, negative linework/text/hatching cases, compact marks and coordinate/size bounds. A new offline browser check uses actual synthetic PDF text/raster rendering and verifies long/short tick-ended members, saved original-pixel support and unchanged model/calibration stores. Existing real OCR, native PDF/source-change and touch accuracy-check regressions are also run. Final results are recorded in the review description.
 - **OPEN:** broader and independently confirmed real-drawing corpus, agreed source-quality tolerances, physical iPad Safari/Raspberry Pi latency/memory, reliable drawing viewport ownership, arrowhead-only/diagonal dimension support, independent automatic scale checks, cross-view registration and M1.
 - **Next:** validate additional permitted regions and device interaction, inspect omissions/false matches beyond the pilot region, and add drawing-view ownership before connecting reliable dimension evidence to automatic scale reasoning. Guide: [ENDPOINT_ASSOCIATION_V2.md](ENDPOINT_ASSOCIATION_V2.md).
+
+
+## Roadmap amendment — 2026-11-02 — Responsive processing before hardware/model commitment
+
+- User priority: avoid long waits in normal use. A GPU demonstration does not establish the latency of this app; measure the actual drawing workflow rather than choosing hardware by model/GPU reputation.
+- Separate immediate local interaction from background analysis. Use native PDF extraction and deterministic tools first where useful, and bounded specialist vision calls for unresolved regions. A full-sheet language/vision-model call is not required for each tap, edit, or room change.
+- Make workstation/operator-controlled GPU processing an interchangeable heavy-analysis route. Benchmark explicitly approved managed processing as an optional candidate using synthetic/public data. Paid services, infrastructure deployment and private drawing transfers require their own concrete authorization; none are performed here.
+- Add provisional p95 budgets for UI response, cached results, first useful region evidence and a reference one-room job, with honest cold/warm, network, queue, accuracy, memory and cost reporting. Do not label token streaming or an unverified preview as a completed reconstruction.
+- **Next engineering batch RP-1:** instrument the existing pipeline and UI responsiveness, define a representative reference workload, and benchmark the current local stages before selecting a vision model or deployment route. Then implement cancellable/versioned jobs and incremental cached processing. Stage 0 source-truth work continues alongside these measurements.
+- **OPEN:** all latency targets and backend comparisons; physical iPad/Pi measurements; real-model accuracy; remote authentication/privacy/retention; independent scale, viewport ownership, cross-view registration and M1. Existing two-label accuracy results and passing correctness tests are not performance benchmarks.
+- No runtime model, hosting, data-sharing policy or production deployment changed in this documentation batch. Details: [RESPONSIVE_PROCESSING_PLAN.md](RESPONSIVE_PROCESSING_PLAN.md).
