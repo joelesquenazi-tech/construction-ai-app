@@ -35,7 +35,7 @@ Stages can contain other stages. In particular a dimension-worker span contains 
 
 ## Repeatable reference workload
 
-Install the repository's pinned Playwright 1.56.1 and its Chromium browser using the same process as CI. Then run from the repository root:
+Install the repository's pinned Playwright 1.56.1 and its Chromium browser using the same process as CI. The browser job pins Ubuntu 24.04 because the moving `ubuntu-latest` runner advanced to an OS unsupported by this fixed Playwright version. Then run from the repository root:
 
 ```sh
 node tools/benchmark-scans.cjs --output /absolute/path/scan-report.json

@@ -19,7 +19,8 @@ jobs:
       - name: Construction geometry and scale evidence unit tests
         run: node --test tests/*.test.cjs
   offline-ocr:
-    runs-on: ubuntu-latest
+    # Match the pinned Playwright baseline; ubuntu-latest can change OS versions.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
