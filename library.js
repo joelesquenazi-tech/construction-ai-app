@@ -1,6 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const DB='construction-ai-private-drawings',STORE='images',META='construction-ai-sheet-library-v1';
+const perf=window.ConstructionPerformance,timed=(trace,name,fn)=>perf.measure(trace,name,fn);
 const categories=['Architectural','Structural','Mechanical','Electrical','Plumbing','Interiors','Other'];
 const drawingType=item=>['','floor-plan','elevation','other'].includes(item?.drawingType)?item.drawingType:(item?.modelKind==='floor'?'floor-plan':item?.modelKind==='elevation'?'elevation':'');
 const typeLabel=value=>({'floor-plan':'Floor plan',elevation:'Elevation',other:'Other'})[value]||'Not labeled';
@@ -27,36 +28,55 @@ function normalizeFile(file){
  return type?new File([file],file.name,{type,lastModified:file.lastModified}):file;
 }
 async function add(file,options={}){
+ const trace=perf.start('import',{source_type:window.constructionAIPdf.isPdf(file)?'pdf':'raster',input_bytes:file.size});
+ let outcome='failed';
+ try{
+  const result=await addMeasured(file,options,trace);
+  outcome=result?'complete':'discarded';
+  if(result){
+   const size=window.constructionAIActiveDimensions||{};
+   trace?.metadata({page_count:result.count,width_px:size.width,height_px:size.height});
+   if(trace)await timed(trace,'result_render',async()=>{
+    const image=$('sheet');
+    try{await image.decode();await trace.paint('first_usable')}catch{/* No usable-paint claim if decoding failed. */}
+   });
+  }
+  return result;
+ }finally{trace?.finish(outcome)}
+}
+async function addMeasured(file,options,trace){
  file=normalizeFile(file);const values=importOptions(options);validateOptions(values);
  if(file.size>40*1024*1024)throw Error('Choose a drawing up to 40 MB.');
- if(window.constructionAIPdf.isPdf(file))return addPdf(file,values);
+ if(window.constructionAIPdf.isPdf(file))return addPdf(file,values,trace);
  if(!['image/jpeg','image/png'].includes(file.type))throw Error('Choose a JPG, PNG or PDF drawing.');
  const {sheetId,scope,category}=values;
  const existing=sheets.find(x=>x.projectId===scope.projectId&&x.roomId===scope.roomId&&displayId(x)===sheetId);
  const id=existing?.id||internalId(sheetId,scope);
- if(existing&&!confirm('Replace the stored image for '+sheetId+'? Reviews will be retained.'))return;
- const size=await dims(file);
+ if(existing&&!timed(trace,'review_wait',()=>confirm('Replace the stored image for '+sheetId+'? Reviews will be retained.')))return;
+ const size=await timed(trace,'import_decode',()=>dims(file));
  if(JSON.stringify(scope)!==JSON.stringify(projects().current()))throw Error('Room changed during import. Choose the drawing again.');
- await transaction('readwrite',store=>store.put(file,id));
+ await timed(trace,'import_storage',()=>transaction('readwrite',store=>store.put(file,id)));
  const metadata={width:size.width,height:size.height,pdfSourceKey:null,pdfPage:null,pdfPageCount:null,name:values.name||existing?.name||nameFromFile(file),category,drawingType:values.drawingType||drawingType(existing)};
  if(existing)Object.assign(existing,metadata);
  else sheets.push({id,sheetId,projectId:scope.projectId,roomId:scope.roomId,...metadata,references:[]});
- persist();await select(id);$('libraryStatus').textContent=sheetId+' saved locally ('+size.width+' × '+size.height+').';
+ timed(trace,'import_metadata',persist);await timed(trace,'import_select',()=>select(id));$('libraryStatus').textContent=sheetId+' saved locally ('+size.width+' × '+size.height+').';
  return {ids:[id],count:1};
 }
 
-async function addPdf(file,values){
+async function addPdf(file,values,trace){
  const base=values.sheetId;
  if(!/^[A-Z0-9][A-Z0-9._-]{0,30}$/.test(base))throw Error('Enter a valid sheet number, e.g. A101');
  const scope=values.scope,category=values.category,name=values.name||nameFromFile(file);
- const pages=await window.constructionAIPdf.prepare(file,values.pages,text=>$('libraryStatus').textContent=text);
+ const pages=await timed(trace,'pdf_render',()=>window.constructionAIPdf.prepare(file,values.pages,text=>$('libraryStatus').textContent=text));
  if(JSON.stringify(scope)!==JSON.stringify(projects().current()))throw Error('Room changed during import. Choose the PDF again.');
  const entries=pages.map(page=>{const sheetId=page.pageCount>1?base.slice(0,24)+'-P'+page.page:base;const previous=sheets.find(x=>projects().belongs(x)&&displayId(x)===sheetId);return{...page,sheetId,previous,id:previous?.id||internalId(sheetId,scope)}});
- if(entries.some(x=>x.previous)&&!confirm('Replace '+entries.filter(x=>x.previous).length+' existing sheet(s)? Saved reviews will be retained; check their alignment against the new PDF.'))return;
+ if(entries.some(x=>x.previous)&&!timed(trace,'review_wait',()=>confirm('Replace '+entries.filter(x=>x.previous).length+' existing sheet(s)? Saved reviews will be retained; check their alignment against the new PDF.')))return;
  const sourceKey='pdf-source-'+crypto.randomUUID();
+ await timed(trace,'import_storage',async()=>{
  const db=await openDB();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE);store.put(file,sourceKey);for(const item of entries)store.put(item.blob,item.id);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=tx.onabort=()=>{db.close();reject(tx.error||Error('PDF storage failed'))}});
+ });
  for(const item of entries){const metadata={id:item.id,sheetId:item.sheetId,projectId:scope.projectId,roomId:scope.roomId,name:name+(item.pageCount>1?' — page '+item.page:''),category,drawingType:values.drawingType||drawingType(item.previous),width:item.width,height:item.height,pdfSourceKey:sourceKey,pdfPage:item.page,pdfPageCount:item.pageCount};if(item.previous)Object.assign(item.previous,metadata);else sheets.push({...metadata,references:[]})}
- persist();await select(entries[0].id);$('libraryStatus').textContent=entries.length+' PDF page(s) saved locally as separate sheets. Original PDF retained. Rendered previews are unverified.';
+ timed(trace,'import_metadata',persist);await timed(trace,'import_select',()=>select(entries[0].id));$('libraryStatus').textContent=entries.length+' PDF page(s) saved locally as separate sheets. Original PDF retained. Rendered previews are unverified.';
  return {ids:entries.map(item=>item.id),count:entries.length};
 }
 

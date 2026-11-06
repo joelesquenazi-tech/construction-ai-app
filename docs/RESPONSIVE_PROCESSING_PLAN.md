@@ -1,6 +1,6 @@
 # Responsive processing plan
 
-Status: roadmap requirements and candidate architecture, 2026-11-02. No latency or hardware claim has been validated for the complete application. This plan expands the existing provider-independent execution contract.
+Status: roadmap requirements, 2026-11-02; first local instrumentation/worker benchmark batch, 2026-11-05. No latency or hardware claim has been validated for the complete application. This plan expands the existing provider-independent execution contract.
 
 ## Product behavior
 
@@ -48,7 +48,11 @@ Before sending private drawings to any processing server, obtain explicit projec
 
 ## Release gate and next deliverable
 
-The next batch is an instrumented benchmark of the current pipeline with a declared representative workload and a responsiveness report. Record failures and unsupported scopes. Backend/model selection follows those results; a UI-progress demonstration is not sufficient.
+The first RP-1 slice instruments current import, native text/OCR, source guards, dimension association, review wait, saving and paint opportunities. An opt-in on-device report and actual offline browser benchmark are implemented. The declared synthetic workload includes fresh-context and repeated runs, percentile sample counts, idle/under-scan touch feedback, long tasks, outcome accounting and coarse JS heap samples. Unsupported heavy vision, remote queue/network, reconstruction, cache reopening, device peak memory and operating cost remain explicit gaps. Guide, protocol and measured comparison: [SCAN_PERFORMANCE.md](SCAN_PERFORMANCE.md).
+
+The baseline exposed main-thread pixel/line work as an interaction delay. A bounded local worker now performs raster decoding, thresholding and dimension association when supported. The existing main-thread path remains a capability fallback, with exact findings parity checked on both synthetic fixtures. Worker loading/processing errors retain saved findings; post-processing source checks still reject stale results. This is an early RP-3 improvement justified by RP-1 evidence; it is not a persistent/cancellable RP-2 job system. No heavy vision model or remote inference is added.
+
+**Next:** RP-2 versioned/cancellable background job contract and recovery, then broaden measurements to permitted real regions and physical iPad/Pi. Keep fallback latency and memory acceptance open. Device measurements can use the optional Settings timing export. Backend/model selection follows comparable complete-workflow results; a UI-progress demonstration is not sufficient.
 
 M1 still requires source-backed dimensional accuracy, independent scale/cross-view checks and persistent corrections. Speed requirements supplement those gates. Existing draft vision adapter work does not prove real-model speed or useful hardware capacity.
 

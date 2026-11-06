@@ -40,6 +40,24 @@ function pdf(){
   await page.getByRole('button',{name:'Review '+short.text,exact:true}).click({force:true});await page.waitForSelector('.dimension-evidence-overlay line',{state:'attached'});assert.match(await page.locator('#dimensionEvidenceDetails').innerText(),/endpoint markers/);
   const after=await page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).filter(k=>/(?:wall|scale|3d|geometry)/i.test(k)).map(k=>[k,localStorage.getItem(k)])));
   assert.deepEqual(after,before);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.equal(result.ready_for_verified_3d,false);
-  console.log('PASS: offline real PDF rendering/text, tick-ended long and short chain members matched, original-pixel support retained, no external requests, calibration/walls unchanged; all geometry unverified.');
+  const saved=await page.evaluate(()=>localStorage.getItem('construction-ai-sheet-findings-v1'));
+  await page.evaluate(()=>{
+   window.ConstructionPerformance.setEnabled(true);window.__savedWorker=window.Worker;window.__workerStopped=false;
+   window.Worker=function(url,...options){
+    if(String(url).endsWith('/dimension-scan-worker.js'))return {
+     postMessage(){queueMicrotask(()=>this.onerror?.(new Event('error')))},
+     terminate(){window.__workerStopped=true}
+    };
+    return new window.__savedWorker(url,...options);
+   };
+   document.getElementById('scanDrawing').click();
+  });
+  await page.waitForFunction(()=>window.ConstructionPerformance.report().operations.some(r=>r.outcome==='failed'));
+  assert.equal(await page.evaluate(()=>localStorage.getItem('construction-ai-sheet-findings-v1')),saved,'Worker error must preserve previous findings');
+  const failure=await page.evaluate(()=>({stopped:window.__workerStopped,record:window.ConstructionPerformance.report().operations.at(-1)}));
+  assert(failure.stopped);assert(failure.record.stages.some(s=>s.name==='dimension_worker'&&s.status==='failed'));assert.equal(failure.record.marks_ms.first_usable,undefined);
+  await page.evaluate(()=>{window.Worker=window.__savedWorker;delete window.__savedWorker});
+  assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+  console.log('PASS: offline real PDF rendering/text, tick-ended long and short chain members matched, worker error preserves findings and terminates job, no external requests, calibration/walls unchanged; all geometry unverified.');
  }finally{clearTimeout(deadline);await browser?.close();await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1});

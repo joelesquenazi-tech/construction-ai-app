@@ -32,3 +32,5 @@ jobs:
       - run: node tests/dimension-source-browser.cjs
       - run: node tests/dimension-check-browser.cjs
       - run: node tests/dimension-chain-browser.cjs
+      - name: Offline scan timing, touch feedback and diagnostic privacy checks
+        run: node tools/benchmark-scans.cjs --smoke
