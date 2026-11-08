@@ -23,7 +23,7 @@ function pdf(){
   await context.setOffline(true);await page.reload();await page.waitForFunction(()=>window.constructionAIUploadDrawing&&document.getElementById('sheetSelector').options.length);
   await page.evaluate(async bytes=>{
    window.constructionAIPreviewStartup('return');await window.constructionAIUploadDrawing(new File([Uint8Array.from(bytes)],'synthetic-dimension-chain.pdf',{type:'application/pdf'}),{drawingType:'elevation'});window.constructionAIShowTab('drawings');
-   window.Tesseract={createWorker:async()=>{throw Error('Embedded PDF text must not use image OCR')}};
+   window.ConstructionScanOCR={open:async()=>{throw Error('Embedded PDF text must not use image OCR')}};
   },Array.from(pdf()));
   const before=await page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).filter(k=>/(?:wall|scale|3d|geometry)/i.test(k)).map(k=>[k,localStorage.getItem(k)])));
   await page.click('#scanDrawing');await page.waitForFunction(()=>document.getElementById('scanStatus').textContent.includes('native PDF text items saved for review'));

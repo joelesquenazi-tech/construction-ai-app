@@ -143,15 +143,15 @@ async function negativeChecks(page){
  checks.push('stale-source outcome never claims usable findings');
  id=report.id;
  await page.evaluate(()=>{
-  window.__realText=window.constructionAIPdf.extractText;window.__realOCR=window.Tesseract;
+  window.__realText=window.constructionAIPdf.extractText;window.__realOCR=window.ConstructionScanOCR;
   window.constructionAIPdf.extractText=async(...args)=>({...await window.__realText(...args),items:[]});
-  window.Tesseract={createWorker:async()=>({recognize:async()=>({data:{lines:[],words:[]}}),terminate:async()=>{}})};
+  window.ConstructionScanOCR={open:async()=>({recognize:async()=>({data:{lines:[],words:[]}}),terminate:async()=>{}})};
   document.getElementById('scanDrawing').click();
  });
  await page.waitForFunction(id=>window.ConstructionPerformance.report().operations.some(r=>r.id>id),id);
  report=await page.evaluate(()=>window.ConstructionPerformance.report().operations.at(-1));assert.equal(report.outcome,'no_findings');assert.equal(report.marks_ms.first_usable,undefined);
  assert.equal(await page.evaluate(()=>localStorage.getItem('construction-ai-sheet-findings-v1')),before);
- await page.evaluate(()=>{window.constructionAIPdf.extractText=window.__realText;window.Tesseract=window.__realOCR;delete window.__realText;delete window.__realOCR});
+ await page.evaluate(()=>{window.constructionAIPdf.extractText=window.__realText;window.ConstructionScanOCR=window.__realOCR;delete window.__realText;delete window.__realOCR});
  checks.push('empty OCR outcome preserves findings; mock used only in this separate accounting check');
  // Calibrate long-task observation separately; this is not a product timing sample.
  const probe=await page.evaluate(async()=>{

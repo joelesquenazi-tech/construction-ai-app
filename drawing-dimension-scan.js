@@ -25,31 +25,37 @@ async function stillCurrent(snapshot){
   window.constructionAIProjects.current().roomId===snapshot.source.room_id&&
   core.sameSource(snapshot.source,now.source);
 }
-async function enrich(findings,snapshot,trace=null){
+async function enrich(findings,snapshot,trace=null,signal){
+ const jobs=window.ConstructionScanJobs;
+ jobs.check(signal);
  // Skip pixel allocation when there is no explicit measurement reading.
  if(!findings.some(f=>core.parseMeasurement(f.text))){trace?.metadata({dimension_execution:'not_needed'});return findings.map(f=>({...f,source:{...snapshot.source}}))}
  if(typeof Worker==='function'&&typeof OffscreenCanvas==='function'&&typeof createImageBitmap==='function'){
   const result=await timed(trace,'dimension_worker',()=>new Promise((resolve,reject)=>{
    const worker=new Worker(new URL('./dimension-scan-worker.js',document.baseURI));
-   const timer=setTimeout(()=>{worker.terminate();reject(Error('Local dimension processing timed out. Try a smaller drawing.'))},30000);
-   const end=()=>{clearTimeout(timer);worker.terminate()};
+   const stop=()=>{end();reject(signal.reason)};
+   const timer=setTimeout(()=>{end();reject(Object.assign(Error('Local dimension processing timed out. Try a smaller drawing.'),{code:'timed_out'}))},30000);
+   const end=()=>{clearTimeout(timer);signal?.removeEventListener('abort',stop);worker.terminate()};
+   signal?.addEventListener('abort',stop,{once:true});
    worker.onmessage=event=>{end();const result=event.data;
     if(result?.error)reject(Error(result.error));else if(result?.unsupported||Array.isArray(result?.findings))resolve(result);
     else reject(Error('Invalid local dimension processing result'));
    };
-   worker.onerror=()=>{end();reject(Error('Local dimension worker unavailable. Refresh the app while online.'))};
+   worker.onerror=worker.onmessageerror=()=>{end();reject(Error('Local dimension worker unavailable. Refresh the app while online.'))};
    try{worker.postMessage({blob:snapshot.ref.blob,findings,source:snapshot.source})}catch(error){end();reject(error)}
   }));
   if(!result.unsupported){trace?.metadata({dimension_execution:'worker'});trace?.workerStages(result.stages);return result.findings}
  }
  trace?.metadata({dimension_execution:'main_fallback'});
- return enrichOnMain(findings,snapshot,trace);
+ jobs.check(signal);
+ return enrichOnMain(findings,snapshot,trace,signal);
 }
-async function enrichOnMain(findings,snapshot,trace){
+async function enrichOnMain(findings,snapshot,trace,signal){
  const url=URL.createObjectURL(snapshot.ref.blob),image=new Image();
  const canvas=document.createElement('canvas');
  try{
-  await timed(trace,'raster_decode',()=>new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Unable to read the local drawing raster.'));image.src=url}));
+  await timed(trace,'raster_decode',()=>window.ConstructionScanJobs.wait(new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Unable to read the local drawing raster.'));image.src=url}),signal));
+  window.ConstructionScanJobs.check(signal);
   if(image.naturalWidth!==snapshot.source.width_px||image.naturalHeight!==snapshot.source.height_px)throw Error('Drawing pixel dimensions changed; re-import this source.');
   const size=core.analysisSize(image.naturalWidth,image.naturalHeight);
   canvas.width=size.width;canvas.height=size.height;
@@ -65,7 +71,7 @@ async function enrichOnMain(findings,snapshot,trace){
   return rows;
   });
   return timed(trace,'line_association',()=>core.enrich(findings,rows,snapshot.source));
- }finally{URL.revokeObjectURL(url);canvas.width=canvas.height=0}
+ }finally{image.onload=image.onerror=null;image.removeAttribute('src');URL.revokeObjectURL(url);canvas.width=canvas.height=0}
 }
 window.ConstructionDimensionScan={capture,stillCurrent,enrich};
 let cycle=0;

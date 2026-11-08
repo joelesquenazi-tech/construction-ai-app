@@ -117,7 +117,7 @@ window.constructionAIGetPdfTextSource=async sheetId=>{
 };
 // Snapshot the exact selected page and original bytes for source-linked analysis.
 window.constructionAIGetDrawingSource=async sheetId=>{
- const item=sheets.find(x=>x.id===sheetId&&projects()?.belongs(x));
+ const item=load().find(x=>x.id===sheetId&&projects()?.belongs(x));
  if(!item)throw Error('Drawing is no longer in the current room.');
  const metadata={...item},scope={projectId:item.projectId,roomId:item.roomId};
  const stored=await transaction('readonly',store=>store.get(sheetId));

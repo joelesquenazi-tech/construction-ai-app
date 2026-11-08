@@ -49,7 +49,7 @@ async function replaceRaster(page,shade){
    window.constructionAIPreviewStartup('return');
    await window.constructionAIUploadDrawing(new File([Uint8Array.from(bytes)],'synthetic-two-page.pdf',{type:'application/pdf'}),{drawingType:'floor-plan',pages:'2'});
    window.constructionAIShowTab('drawings');
-   window.Tesseract={createWorker:async()=>{throw Error('Native PDF must not use image OCR')}};
+   window.ConstructionScanOCR={open:async()=>{throw Error('Native PDF must not use image OCR')}};
   },Array.from(syntheticPDF()));
   const geometryBefore=await page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).filter(k=>/(?:wall|scale|3d|geometry)/i.test(k)).map(k=>[k,localStorage.getItem(k)])));
   await page.click('#scanDrawing');
@@ -70,7 +70,7 @@ async function replaceRaster(page,shade){
   assert.match(await page.locator('#dimensionEvidenceDetails').innerText(),/source has changed/);
   const previous=await page.evaluate(()=>localStorage.getItem('construction-ai-sheet-findings-v1'));
   await page.evaluate(()=>{
-   window.Tesseract={createWorker:async()=>({recognize:()=>new Promise(resolve=>{window.finishSyntheticOCR=resolve}),terminate:async()=>{}})};
+   window.ConstructionScanOCR={open:async()=>({recognize:()=>new Promise(resolve=>{window.finishSyntheticOCR=resolve}),terminate:async()=>{}})};
   });
   await page.click('#scanDrawing');await page.waitForFunction(()=>!!window.finishSyntheticOCR);
   const snapshot=await page.evaluate(()=>window.ConstructionDimensionScan.capture(document.getElementById('sheetSelector').value));

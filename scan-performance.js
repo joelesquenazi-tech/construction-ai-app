@@ -11,7 +11,7 @@
   'review_wait','findings_save_and_dom','result_render','ocr_cleanup','import_decode',
   'pdf_render','import_storage','import_metadata','import_select','dimension_worker']);
  const MARKS=new Set(['acknowledgement','ready_for_review','first_usable','outcome_visible']);
- const OUTCOMES=new Set(['complete','no_findings','discarded','stale','failed']);
+ const OUTCOMES=new Set(['complete','no_findings','discarded','stale','failed','cancelled','timed_out','interrupted']);
  const NUMBERS=new Set(['input_bytes','raster_bytes','width_px','height_px','page_count',
   'finding_count','measurement_count','span_count']);
  const ENUMS={source_type:['pdf','raster'],route:['pdf_embedded_text','raster_ocr'],

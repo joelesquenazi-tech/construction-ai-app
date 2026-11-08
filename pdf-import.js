@@ -78,21 +78,30 @@
       throw error;
     } finally { await task.destroy(); }
   }
-  async function extractText(file, number, expectedPixels) {
+  async function extractText(file, number, expectedPixels, signal) {
     if (!isPdf(file)) throw Error('Select a local PDF source to extract embedded text.');
     if (!Number.isSafeInteger(number) || number < 1) throw Error('Invalid PDF page.');
     if (file.size > 40 * 1024 * 1024) throw Error('Choose a PDF no larger than 40 MB.');
     if (!window.ConstructionPDFText?.nativeFindings)
       throw Error('Local PDF text positioning tools are unavailable; refresh the app.');
+    const check=()=>{if(signal?.aborted)throw signal.reason};
+    check();
     const pdfjs=await loadEngine();
+    check();
+    const data=new Uint8Array(await file.arrayBuffer());
+    check();
     const task=pdfjs.getDocument({
-      data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,
+      data,isEvalSupported:false,
       useWorkerFetch:false,BinaryDataFactory:LocalBinaryData,
       standardFontDataUrl:new URL('standard_fonts/',root).href,
       wasmUrl:new URL('wasm/',root).href,
       enableXfa:false,stopAtErrors:true
     });
-    task.onPassword=()=>task.destroy();
+    let destruction;
+    const destroy=()=>destruction??=Promise.resolve().then(()=>task.destroy());
+    const abort=()=>{void destroy().catch(()=>{})};
+    signal?.addEventListener('abort',abort,{once:true});
+    task.onPassword=abort;
     try {
       const doc=await task.promise;
       if (number>doc.numPages) throw Error('Requested page exceeds PDF length.');
@@ -109,13 +118,14 @@
         const content=await page.getTextContent({
           includeMarkedContent:false,disableNormalization:false
         });
+        check();
         return {
           items:content.items.filter(item=>item&&typeof item.str==='string'),
           transform:viewport.transform,
           width,height,page:number,pageCount:doc.numPages
         };
       } finally {page.cleanup()}
-    } finally {await task.destroy()}
+    } finally {signal?.removeEventListener('abort',abort);await destroy()}
   }
   window.constructionAIPdf = { isPdf, prepare, extractText };
 })();
