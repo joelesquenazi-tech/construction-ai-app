@@ -36,7 +36,9 @@ await page.evaluate(()=>{window.constructionAIPreviewStartup('return');window.co
 await page.selectOption('#sheetSelector',dimension.source.sheet_id);
 await page.waitForFunction(id=>window.constructionAIDimensionSource?.sheet_id===id,dimension.source.sheet_id);
 await page.evaluate(()=>{window.constructionAIPreviewStartup('return');window.constructionAIShowTab('drawings')});
-await page.getByRole('button',{name:'Review '+dimension.text,exact:true}).click({force:true});
+// The drawing tab fits its viewport on the next frame. Let the marker become
+// stable and receive a real click rather than forcing a click at stale coordinates.
+await page.getByRole('button',{name:'Review '+dimension.text,exact:true}).click();
 await page.waitForSelector('.dimension-evidence-overlay line',{state:'attached'});
 assert.deepEqual(external,[]);
 
