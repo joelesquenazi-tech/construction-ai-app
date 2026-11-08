@@ -22,7 +22,7 @@ function showRecovery(){
 }
 async function refreshRecovery(){
  if(busy)return;
- try{await jobs.exclusive(()=>{})}catch{}
+ try{if(jobs.latest(scope())?.state==='running')await jobs.exclusive(()=>{})}catch{}
  showRecovery();
 }
 async function start(retry=false){
