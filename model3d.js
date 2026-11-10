@@ -6,8 +6,8 @@ const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID()
 const save=()=>{localStorage.setItem(scopedKey(),JSON.stringify(state))};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
-async function put(key,file){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(file,fileKey(key));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
-async function getFile(key){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readonly'),r=tx.objectStore('files').get(fileKey(key));tx.oncomplete=()=>{db.close();resolve(r.result||null)};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function put(key,file){return window.ConstructionDrawingStorage.write(await openDB(),'files',[[fileKey(key),file]])}
+async function getFile(key){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readonly'),r=tx.objectStore('files').get(fileKey(key));tx.oncomplete=()=>{db.close();try{resolve(window.ConstructionDrawingStorage.unpack(r.result)||null)}catch(e){reject(e)}};tx.onerror=()=>{db.close();reject(tx.error)}})}
 async function remove(key){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(fileKey(key));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
 // Local, project/room-scoped evidence storage. A proposed scale is never
 // applied through this interface; the private review JSON stays in IndexedDB.
