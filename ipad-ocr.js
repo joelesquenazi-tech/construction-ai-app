@@ -76,14 +76,21 @@ async function scan(id,job,prior,stillHere){
    native=items.length>0;
   }
   if(!native){
+   let data=timed(trace,'text_cache_read',()=>window.ConstructionTextCache.get(snapshot.source));
+   trace?.metadata({text_cache:data?'hit':'miss'});
+   if(!data){
    status.textContent='Preparing bundled local English image text recognition…';
    job.stage('ocr_setup');
    worker=await run('ocr_worker_init',()=>window.ConstructionScanOCR.open(job.signal,m=>{
     if(!job.signal.aborted&&m.status)status.textContent='Image OCR: '+m.status+(typeof m.progress==='number'?' '+Math.round(m.progress*100)+'%':'');
    }));
    job.stage('ocr');
-   const result=await run('ocr_recognize',()=>worker.recognize(snapshot.ref.blob)),data=result.data||{},
-    words=Array.isArray(data.words)?data.words:[],lines=Array.isArray(data.lines)?data.lines:[];
+   const result=await run('ocr_recognize',()=>worker.recognize(snapshot.ref.blob));
+   data=result.data||{};
+   await assertCurrent(snapshot);
+   timed(trace,'text_cache_write',()=>window.ConstructionTextCache.put(snapshot.source,data));
+   }else{status.textContent='Reusing text recognition for this unchanged drawing…'}
+   const words=Array.isArray(data.words)?data.words:[],lines=Array.isArray(data.lines)?data.lines:[];
    const source=lines.length?lines:words;
    items=timed(trace,'findings_normalize',()=>source.slice(0,2500).map((w,i)=>{
     const text=String(w.text||'').trim(),bbox=window.ConstructionDimensionEvidence.ocrBox(w.bbox);

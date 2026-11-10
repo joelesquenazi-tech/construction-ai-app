@@ -66,7 +66,8 @@ async function setup(browser,route){
 async function scan(page,route,phase){
  const id=await page.evaluate(()=>window.ConstructionPerformance.report().operations.at(-1)?.id||0);
  const buttons=await Promise.all(['#zoomIn','#zoomOut'].map(s=>page.locator(s).boundingBox()));
- const start=await page.evaluate(()=>{const start=performance.now();document.getElementById('scanDrawing').click();return start});
+ // Keep the existing extraction benchmark uncached; cache reuse has a separate browser gate.
+ const start=await page.evaluate(()=>{window.ConstructionTextCache.clear();const start=performance.now();document.getElementById('scanDrawing').click();return start});
  let n=0,record;
  do{
   const b=buttons[n++%2];await page.touchscreen.tap(b.x+b.width/2,b.y+b.height/2);

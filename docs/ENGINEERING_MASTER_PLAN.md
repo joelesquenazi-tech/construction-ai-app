@@ -541,3 +541,10 @@ Define a versioned, dependency-free feature catalog and JSON instance schema wit
 ## Progress log — 2026-11-07 — Cancellable local scans (RP-2 local slice)
 
 Drawing scans can be cancelled before saving. Local recovery records are tied to the original file, page raster, room and job version. After an interruption, the user can restart from the beginning on the same drawing. A second current tab cannot run another scan simultaneously. Saved reviews changed during processing prevent replacement. See [SCAN_JOBS.md](SCAN_JOBS.md). Durable remote execution and checkpoint resume remain open.
+
+## Progress log — 2026-11-10 — Raw OCR cache and consolidated device acceptance
+
+- RP-4 first slice: bounded private raw OCR reuse keyed by source identity and extraction version; rerun current knowledge matching/dimension association and retain replacement/source/review guards. Cached OCR never restores confirmed geometry or corrections.
+- Added reload/parity and declined-replacement browser coverage; source/revision/version invalidation, bounds, corruption/storage failures and reset-generation unit cases. The extraction benchmark stays explicitly uncached.
+- Continue independent implementation and automated checks before requiring Joel on the iPad. Prepared one combined physical-device checklist in DEVICE_ACCEPTANCE_SESSION.md; it has not been executed.
+- Open: selected-region pipeline, complete analysis cache, real vision accuracy/speed, independently verified drawing corpus, automatic scale/cross-view reconciliation and M1. This batch does not claim a released build or physical-device verification.

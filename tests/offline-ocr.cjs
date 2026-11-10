@@ -42,5 +42,29 @@ await page.getByRole('button',{name:'Review '+dimension.text,exact:true}).click(
 await page.waitForSelector('.dimension-evidence-overlay line',{state:'attached'});
 assert.deepEqual(external,[]);
 
-console.log('PASS: real offline OCR, measurement boxes and witness endpoints, correction/Undo and reload, no external requests; all geometry unverified.');
+// Reuse actual bundled OCR after offline reload, while recomputing dimension evidence.
+await page.evaluate(()=>{
+ window.ConstructionPerformance.setEnabled(true);
+ window.ConstructionScanOCR.open=async()=>{throw Error('Cache hit must not run OCR')};
+});
+await page.click('#scanDrawing');
+await page.waitForFunction(()=>!document.getElementById('scanDrawing').disabled);
+const cached=await page.evaluate(()=>{
+ const id=document.getElementById('sheetSelector').value;
+ return {findings:JSON.parse(localStorage.getItem('construction-ai-sheet-findings-v1'))[id],
+ report:window.ConstructionPerformance.report().operations.at(-1)};
+});
+assert.equal(cached.report.outcome,'complete');assert.equal(cached.report.metadata.text_cache,'hit');
+assert.deepEqual(cached.findings,findings,'Cached OCR must produce identical unverified findings');
+// A declined replacement keeps corrections exactly as saved, even on a cache hit.
+await page.getByRole('button',{name:'Review '+dimension.text,exact:true}).click();
+await page.fill('#correction','13 FEET');await page.click('#saveReview');
+const reviewed=await page.evaluate(()=>localStorage.getItem('construction-ai-sheet-findings-v1'));
+page.removeAllListeners('dialog');page.on('dialog',d=>d.dismiss());
+await page.click('#scanDrawing');await page.waitForFunction(()=>!document.getElementById('scanDrawing').disabled);
+assert.equal(await page.evaluate(()=>localStorage.getItem('construction-ai-sheet-findings-v1')),reviewed);
+assert.equal(await page.evaluate(()=>window.ConstructionPerformance.report().operations.at(-1).outcome),'discarded');
+assert.deepEqual(external,[]);
+
+console.log('PASS: real offline OCR, measurement boxes and witness endpoints, correction/Undo and reload, cached OCR parity and declined replacement preserves corrections, no external requests; all geometry unverified.');
 }finally{clearTimeout(deadline);await browser?.close();await new Promise(r=>server.close(r))}})().catch(e=>{console.error(e);server.close();process.exitCode=1});

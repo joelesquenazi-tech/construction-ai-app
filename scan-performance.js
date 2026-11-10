@@ -9,12 +9,12 @@
  const STAGES=new Set(['source_capture','source_validation','pdf_text','ocr_script','ocr_worker_init',
   'ocr_recognize','findings_normalize','raster_decode','raster_threshold','line_association',
   'review_wait','findings_save_and_dom','result_render','ocr_cleanup','import_decode',
-  'pdf_render','import_storage','import_metadata','import_select','dimension_worker']);
+  'pdf_render','import_storage','import_metadata','import_select','dimension_worker','text_cache_read','text_cache_write']);
  const MARKS=new Set(['acknowledgement','ready_for_review','first_usable','outcome_visible']);
  const OUTCOMES=new Set(['complete','no_findings','discarded','stale','failed','cancelled','timed_out','interrupted']);
  const NUMBERS=new Set(['input_bytes','raster_bytes','width_px','height_px','page_count',
   'finding_count','measurement_count','span_count']);
- const ENUMS={source_type:['pdf','raster'],route:['pdf_embedded_text','raster_ocr'],
+ const ENUMS={text_cache:['hit','miss'],source_type:['pdf','raster'],route:['pdf_embedded_text','raster_ocr'],
   dimension_execution:['worker','main_fallback','not_needed'],
   run_position:['first_in_page','repeat_in_page']};
  const round=n=>Math.round(Math.max(0,n)*1000)/1000;
