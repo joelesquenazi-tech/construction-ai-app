@@ -1,11 +1,12 @@
 // Real English OCR with browser network offline after service-worker installation.
-const {chromium}=require('playwright');
+const {chromium,webkit}=require('playwright');
+const safari=process.env.TEST_BROWSER==='webkit';
 const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict');
 const root=path.resolve(__dirname,'..');
 const types={'.js':'text/javascript','.mjs':'text/javascript','.wasm':'application/wasm','.css':'text/css','.html':'text/html','.json':'application/json'};
 const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req.url,'http://localhost').pathname==='/'?'index.html':decodeURIComponent(new URL(req.url,'http://localhost').pathname));try{res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(fs.readFileSync(file))}catch{res.writeHead(404).end()}});
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;const deadline=setTimeout(()=>{console.error('Offline OCR test exceeded 150 seconds');process.exit(1)},150000);
-try{browser=await chromium.launch();const context=await browser.newContext();const page=await context.newPage(),external=[];page.setDefaultTimeout(30000);
+try{browser=await (safari?webkit:chromium).launch();const context=await browser.newContext(safari?{viewport:{width:1024,height:1366},isMobile:true,hasTouch:true}:{});const page=await context.newPage(),external=[];page.setDefaultTimeout(30000);
 page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:')&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url())});
 await page.goto('http://127.0.0.1:'+server.address().port+'/');
 await page.evaluate(async()=>{await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(r=>navigator.serviceWorker.addEventListener('controllerchange',r,{once:true}))});

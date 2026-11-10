@@ -4,7 +4,7 @@ Status: prepared; physical iPad and Raspberry Pi checks not performed. Use a tes
 
 ## Prepare without Joel
 
-- Run syntax, unit and all offline browser gates on the exact candidate commit.
+- Run syntax, unit and all offline browser gates on the exact candidate commit, including the WebKit touch-viewport OCR/correction/cache check. WebKit on Linux is a compatibility test, not iPad Safari device acceptance.
 - Keep native PDF and raster OCR fixtures, unchanged measurement tolerances and saved corrections tests.
 - Check source changes, cancellation, interruption/restart, duplicate tabs, cache reuse and reset behavior automatically.
 - Provide the preview link, exact commit and a short list of unresolved device checks together. No keyboard or developer console should be required.

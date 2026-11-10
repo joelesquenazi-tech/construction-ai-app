@@ -548,3 +548,4 @@ Drawing scans can be cancelled before saving. Local recovery records are tied to
 - Added reload/parity and declined-replacement browser coverage; source/revision/version invalidation, bounds, corruption/storage failures and reset-generation unit cases. The extraction benchmark stays explicitly uncached.
 - Continue independent implementation and automated checks before requiring Joel on the iPad. Prepared one combined physical-device checklist in DEVICE_ACCEPTANCE_SESSION.md; it has not been executed.
 - Open: selected-region pipeline, complete analysis cache, real vision accuracy/speed, independently verified drawing corpus, automatic scale/cross-view reconciliation and M1. This batch does not claim a released build or physical-device verification.
+- Added a WebKit touch-viewport CI gate for offline actual OCR, review/Undo/reload and raw cache parity. This is browser compatibility coverage; physical Safari/iPad performance remains untested.
