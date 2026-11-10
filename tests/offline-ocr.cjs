@@ -3,15 +3,20 @@ const {chromium,webkit}=require('playwright');
 const safari=process.env.TEST_BROWSER==='webkit';
 const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict');
 const root=path.resolve(__dirname,'..');
+let originUnavailable=false;
 const types={'.js':'text/javascript','.mjs':'text/javascript','.wasm':'application/wasm','.css':'text/css','.html':'text/html','.json':'application/json'};
-const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req.url,'http://localhost').pathname==='/'?'index.html':decodeURIComponent(new URL(req.url,'http://localhost').pathname));try{res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(fs.readFileSync(file))}catch{res.writeHead(404).end()}});
+const server=http.createServer((req,res)=>{if(originUnavailable){req.socket.destroy();return}const file=path.join(root,new URL(req.url,'http://localhost').pathname==='/'?'index.html':decodeURIComponent(new URL(req.url,'http://localhost').pathname));try{res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(fs.readFileSync(file))}catch{res.writeHead(404).end()}});
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;const deadline=setTimeout(()=>{console.error('Offline OCR test exceeded 150 seconds');process.exit(1)},150000);
 try{browser=await (safari?webkit:chromium).launch();const context=await browser.newContext(safari?{viewport:{width:1024,height:1366},isMobile:true,hasTouch:true}:{});const page=await context.newPage(),external=[];page.setDefaultTimeout(30000);
 page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:')&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url())});
 await page.goto('http://127.0.0.1:'+server.address().port+'/');
 await page.evaluate(async()=>{await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(r=>navigator.serviceWorker.addEventListener('controllerchange',r,{once:true}))});
-await context.setOffline(true);
-await page.reload();await page.waitForFunction(()=>window.constructionAIUploadDrawing&&document.querySelector('#sheetSelector').options.length);
+// WebKit's protocol offline navigation errors before service-worker dispatch on this runner.
+// Refuse every origin socket instead, so a successful reload/OCR still requires cached assets.
+if(safari)originUnavailable=true;else await context.setOffline(true);
+await page.reload();
+assert.equal(await page.evaluate(()=>fetch('./uncached-network-probe').then(()=>false,()=>true)),true,'An uncached request must fail');
+await page.waitForFunction(()=>window.constructionAIUploadDrawing&&document.querySelector('#sheetSelector').options.length);
 await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=1400;c.height=450;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,1400,450);x.fillStyle='black';x.font='bold 64px Arial';x.fillText('PRIMARY BEDROOM',40,110);x.fillText('12 FEET',550,270);x.strokeStyle='black';x.lineWidth=2;x.beginPath();x.moveTo(200,310);x.lineTo(1200,310);x.moveTo(200,285);x.lineTo(200,365);x.moveTo(1200,285);x.lineTo(1200,365);x.stroke();const blob=await new Promise(r=>c.toBlob(r));await window.constructionAIUploadDrawing(new File([blob],'synthetic-text.png',{type:'image/png'}),{drawingType:'floor-plan'});window.constructionAIPreviewStartup('return');window.constructionAIShowTab('drawings')});
 page.on('dialog',d=>d.accept());
 await page.click('#scanDrawing');await page.waitForFunction(()=>document.getElementById('scanStatus').textContent.includes('unverified image OCR findings saved'),null,{timeout:120000});

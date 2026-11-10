@@ -20,3 +20,5 @@ Status: prepared; physical iPad and Raspberry Pi checks not performed. Use a tes
 7. Compare selected dimensions/endpoints to the actual drawing. Agree source-specific tolerances and identify omissions; a fast result is not automatically accurate.
 
 Do not clear real project data during acceptance. Use a disposable test project/build for destructive reset checks. Reports remain local unless explicitly shared. Device tests close only the measured cases, not full-model performance or the one-verified-room milestone.
+
+WebKit CI simulates an unavailable app origin by closing every server connection after shell installation; an uncached probe must fail. Chromium uses browser offline mode. WebKit protocol offline navigation failed internally on the Linux runner before the workflow could be tested. Neither setup reproduces iPad radio or OS lifecycle behavior.
