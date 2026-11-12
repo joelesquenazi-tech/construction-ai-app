@@ -96,6 +96,7 @@ function persist(next){
   throw Error('Refusing to save invalid or mismatched source annotations.');
  localStorage.setItem(key(),JSON.stringify(next));
  review=next;
+ window.dispatchEvent(new Event('construction-wall-corrections-changed'));
 }
 function change(action){
  try{
@@ -379,6 +380,7 @@ if(typeof ResizeObserver!=='undefined'){
 }
 let lastSignature='';
 async function autoScanOnce(){
+ if(document.getElementById('manualModelTools')&&!document.getElementById('manualModelTools').open)return;
  try{
   const src=await window.constructionAITraceSource();
   if(!src?.file||!(window.ConstructionDrawingImageSource.isRaster(src.file)||window.ConstructionDrawingImageSource.isPDF(src.file)))return;

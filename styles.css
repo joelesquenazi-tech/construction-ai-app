@@ -532,3 +532,5 @@ html.workspace-pending body>header,html.workspace-pending body>.app-shell{displa
 .dimension-check-results{background:#f0f7fe;border-radius:9px;padding:0 12px}
 #dimensionCheckStatus{min-height:2em;color:#264e77}
 #dimensionCheckDialog [hidden]{display:none!important}
+
+#automaticRoomScene{width:100%;max-height:480px;background:#f2f6fa;border-radius:14px}#automaticRoom h2{margin-top:0}#automaticRoomIssues li{margin:10px 0}#manualModelTools>summary{cursor:pointer;font-weight:600;padding:12px}#manualModelTools>.model-workspace{margin-top:16px}#automaticRoom [hidden]{display:none!important}

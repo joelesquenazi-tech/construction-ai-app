@@ -68,3 +68,7 @@ These references inform the benchmark design; they do not establish this app's t
 A bounded private cache now reuses raw OCR for unchanged exact sources and the same extraction version. It rebuilds current knowledge suggestions and dimension evidence and retains the normal source/review guards and replacement confirmation. No cached review state is promoted to verified geometry. See [TEXT_CACHE.md](TEXT_CACHE.md).
 
 Continue implementation and automated acceptance before scheduling physical-device involvement. The combined device session is prepared in [DEVICE_ACCEPTANCE_SESSION.md](DEVICE_ACCEPTANCE_SESSION.md). Region-first analysis, complete analysis caching, heavy model evaluation and M1 remain open. Physical iPad/Pi measurements are deferred acceptance gates, not prerequisites for independent engineering work.
+
+## Automatic-first flow — 2026-11-12
+
+The first automatic supported room shell is connected to saved model drawings, using PDF text/OCR and worker-based dimension/wall analysis without mandatory manual setup. Cache source-matching generated evidence separately from user corrections. Actual drawing interpretation remains the priority; speed/UI work must not turn manual tracing or dimension entry into the standard path. See AUTOMATIC_ROOM.md. Physical iPad acceptance remains a later combined session.

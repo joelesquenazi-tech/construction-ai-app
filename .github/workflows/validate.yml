@@ -35,6 +35,8 @@ jobs:
       - run: node tests/dimension-chain-browser.cjs
       - name: Offline scan cancellation and recovery
         run: node tests/scan-jobs-browser.cjs
+      - name: Automatic source-backed room shell without manual input
+        run: node tests/automatic-room-browser.cjs
       - name: Offline scan timing, touch feedback and diagnostic privacy checks
         run: node tools/benchmark-scans.cjs --smoke
 
@@ -50,5 +52,9 @@ jobs:
       - run: npx playwright install --with-deps webkit
       - name: WebKit touch viewport offline OCR, corrections and cache reuse
         run: node tests/offline-ocr.cjs
+        env:
+          TEST_BROWSER: webkit
+      - name: WebKit automatic room reconstruction without manual input
+        run: node tests/automatic-room-browser.cjs
         env:
           TEST_BROWSER: webkit
