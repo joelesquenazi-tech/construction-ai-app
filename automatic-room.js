@@ -10,7 +10,7 @@
  const version=1,normal=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
  const finite=Number.isFinite,near=(a,b,t=3)=>Math.abs(a-b)<=t;
  const unresolved=(code,message)=>({version,status:'unresolved',walls:[],issues:[{code,message}]});
- function validLine(c){return ['h','v'].includes(c?.axis)&&c.points_px?.length===2&&c.points_px.every(p=>Array.isArray(p)&&p.length===2&&p.every(finite))&&finite(c.apparent_width_px)&&c.apparent_width_px>=3&&c.apparent_width_px<=100}
+ function validLine(c){return ['h','v'].includes(c?.axis)&&c.points_px?.length===2&&c.points_px.every(p=>Array.isArray(p)&&p.length===2&&p.every(finite))&&near(c.points_px[0][c.axis==='h'?1:0],c.points_px[1][c.axis==='h'?1:0],.01)&&finite(c.apparent_width_px)&&c.apparent_width_px>=3&&c.apparent_width_px<=100}
  function line(c){const [a,b]=c.points_px;return {...c,fixed:c.axis==='h'?a[1]:a[0],lo:Math.min(...[a,b].map(p=>p[c.axis==='h'?0:1])),hi:Math.max(...[a,b].map(p=>p[c.axis==='h'?0:1]))}}
  function rectangles(candidates){
   const all=candidates.filter(validLine).map(line),h=all.filter(c=>c.axis==='h'),v=all.filter(c=>c.axis==='v'),out=[];
@@ -47,6 +47,8 @@
  function heightFor(label,elevations){
   const notes=[];
   for(const page of elevations){
+   const namedViews=page.findings.map(f=>normal(f.text)).filter(t=>!t.startsWith('CEILING HEIGHT')&&!t.startsWith('ROOM HEIGHT')&&/\b(?:ELEVATION|BEDROOM|BATHROOM|BATH|KITCHEN|OFFICE|TREATMENT|GYM|LOBBY|DINING|LIVING|CLOSET|GARAGE|LAUNDRY)\b/.test(t));
+   if(namedViews.some(t=>t!==label&&t!==label+' ELEVATION'))return {error:'More than one room/view may be present on an elevation. Height ownership is unresolved.'};
    if(!page.findings.some(f=>normal(f.text)===label||normal(f.text)===label+' ELEVATION'))return {error:'Elevation room labels do not uniquely match the floor-plan room.'};
    for(const f of page.findings){
     const match=String(f.text).trim().match(/^(?:CEILING HEIGHT|ROOM HEIGHT)\s*[:=]?\s*(.+?)(?:\s+AFF)?$/i);

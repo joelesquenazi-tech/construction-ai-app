@@ -24,7 +24,7 @@ async function main(){
   if(safari)offline=true;else await context.setOffline(true);
   await page.reload();
   await page.waitForFunction(()=>window.constructionAIUploadDrawing&&window.ConstructionAutomaticPipeline);
-  await page.evaluate(()=>{const build=window.ConstructionAutomaticRoom.build;window.ConstructionAutomaticRoom.build=input=>{window.roomDebug=input;return build(input)};window.constructionAIPreviewStartup('return');window.constructionAIShowTab('model3d')});
+  await page.evaluate(()=>{const run=window.ConstructionAutomaticPipeline.run;window.ConstructionAutomaticPipeline.run=async(...args)=>{try{return await run(...args)}catch(e){window.autoError=String(e.stack||e);throw e}};const build=window.ConstructionAutomaticRoom.build;window.ConstructionAutomaticRoom.build=input=>{window.roomDebug=input;return build(input)};window.constructionAIPreviewStartup('return');window.constructionAIShowTab('model3d')});
   await page.locator('#modelFloorFile').setInputFiles({name:'floor.pdf',mimeType:'application/pdf',buffer:fixture.floor()});
   await page.waitForFunction(()=>document.getElementById('modelFloorFile').value==='');
   await page.locator('#modelElevationFiles').setInputFiles({name:'elevation.pdf',mimeType:'application/pdf',buffer:fixture.elevation()});
@@ -32,7 +32,7 @@ async function main(){
   await page.click('#modelContinue');
   await page.waitForFunction(()=>/generated automatically|finished with unresolved|could not complete|could not start/.test(document.getElementById('automaticRoomStatus').textContent),null,{timeout:120000});
   const result=await saved(page);
-  if(result?.report?.status!=='preliminary')console.error('Synthetic auto debug:',await page.locator('#automaticRoomStatus').textContent(),JSON.stringify(await page.evaluate(()=>window.roomDebug)));
+  if(result?.report?.status!=='preliminary')console.error('Synthetic auto debug:',await page.evaluate(()=>window.autoError),await page.locator('#automaticRoomStatus').textContent(),JSON.stringify(await page.evaluate(()=>window.roomDebug)));
   assert.equal(result?.report?.status,'preliminary',JSON.stringify(result));assert.equal(result.report.walls.length,4);
   for(const [key,n]of Object.entries({length:3.048,width:2.4384,height:2.7432}))assert(Math.abs(result.report.clear_dimensions_m[key]-n)<.01,key);
   assert.equal(await page.locator('#automaticRoomScene polygon').count(),20);

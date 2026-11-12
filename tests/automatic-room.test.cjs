@@ -34,3 +34,8 @@ test('two dimensioned rooms cannot be silently reduced to the first room',()=>{
  f.floor.candidates.push(...copy.floor.candidates);f.floor.findings.push(...copy.floor.findings);
  assert.equal(build(f).issues[0].code,'multiple_rooms');
 });
+
+test('diagonal mislabeled boundaries and multiple elevation room labels are refused',()=>{
+ let f=fixture();f.floor.candidates[0].points_px[1][1]+=20;assert.equal(build(f).status,'unresolved');
+ f=fixture();f.elevations[0].findings.push({text:'BEDROOM ELEVATION'});assert.equal(build(f).status,'unresolved');
+});
