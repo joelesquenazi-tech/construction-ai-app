@@ -24,14 +24,16 @@ async function main(){
   if(safari)offline=true;else await context.setOffline(true);
   await page.reload();
   await page.waitForFunction(()=>window.constructionAIUploadDrawing&&window.ConstructionAutomaticPipeline);
-  await page.evaluate(()=>{window.constructionAIPreviewStartup('return');window.constructionAIShowTab('model3d')});
+  await page.evaluate(()=>{const build=window.ConstructionAutomaticRoom.build;window.ConstructionAutomaticRoom.build=input=>{window.roomDebug=input;return build(input)};window.constructionAIPreviewStartup('return');window.constructionAIShowTab('model3d')});
   await page.locator('#modelFloorFile').setInputFiles({name:'floor.pdf',mimeType:'application/pdf',buffer:fixture.floor()});
   await page.waitForFunction(()=>document.getElementById('modelFloorFile').value==='');
   await page.locator('#modelElevationFiles').setInputFiles({name:'elevation.pdf',mimeType:'application/pdf',buffer:fixture.elevation()});
   await page.waitForFunction(()=>!document.getElementById('modelContinue').disabled);
   await page.click('#modelContinue');
-  await page.waitForFunction(()=>document.getElementById('automaticRoomStatus').textContent.includes('generated automatically'),null,{timeout:120000});
-  const result=await saved(page);assert.equal(result.report.status,'preliminary');assert.equal(result.report.walls.length,4);
+  await page.waitForFunction(()=>/generated automatically|finished with unresolved|could not complete|could not start/.test(document.getElementById('automaticRoomStatus').textContent),null,{timeout:120000});
+  const result=await saved(page);
+  if(result?.report?.status!=='preliminary')console.error('Synthetic auto debug:',await page.locator('#automaticRoomStatus').textContent(),JSON.stringify(await page.evaluate(()=>window.roomDebug)));
+  assert.equal(result?.report?.status,'preliminary',JSON.stringify(result));assert.equal(result.report.walls.length,4);
   for(const [key,n]of Object.entries({length:3.048,width:2.4384,height:2.7432}))assert(Math.abs(result.report.clear_dimensions_m[key]-n)<.01,key);
   assert.equal(await page.locator('#automaticRoomScene polygon').count(),20);
   assert.equal(await page.locator('#manualModelTools').getAttribute('open'),null);
@@ -46,6 +48,22 @@ async function main(){
   await page.reload();await page.waitForFunction(()=>window.ConstructionAutomaticPipeline);
   await page.evaluate(()=>{window.constructionAIPreviewStartup('return');window.constructionAIShowTab('model3d')});
   await page.waitForFunction(()=>document.getElementById('automaticRoomStatus').textContent.includes('generated automatically'));
+  // Cancellation during line processing must terminate the worker and preserve saved evidence.
+  await page.evaluate(()=>{
+   const Native=window.Worker;window.restoreRoomWorker=()=>{window.Worker=Native};
+   window.roomWorkerStarted=false;window.roomWorkerStopped=false;
+   window.Worker=function(url,...args){
+    if(!String(url).endsWith('/automatic-room-worker.js'))return new Native(url,...args);
+    return {postMessage(){window.roomWorkerStarted=true},terminate(){window.roomWorkerStopped=true}};
+   };
+  });
+  await page.click('#automaticRoomRetry');await page.waitForFunction(()=>window.roomWorkerStarted);
+  await page.click('#automaticRoomCancel');
+  await page.waitForFunction(()=>document.getElementById('automaticRoomStatus').textContent.includes('analysis stopped'));
+  assert.equal(await page.evaluate(()=>window.roomWorkerStopped),true);
+  assert.equal((await saved(page)).fingerprint,result.fingerprint);
+  assert.deepEqual((await saved(page)).report,result.report);
+  await page.evaluate(()=>window.restoreRoomWorker());
   // Adding contradictory elevation evidence automatically invalidates the saved shell.
   await page.click('#modelChangeFiles');
   await page.locator('#modelElevationFiles').setInputFiles({name:'other-elevation.pdf',mimeType:'application/pdf',buffer:fixture.elevation(10)});
@@ -54,7 +72,7 @@ async function main(){
   await page.waitForFunction(()=>document.getElementById('automaticRoomIssues').textContent.includes('height notes disagree'),null,{timeout:120000});
   assert.equal((await saved(page)).report.status,'unresolved');assert.equal(await page.locator('#automaticRoomScene polygon').count(),0);
   assert.deepEqual(dialogs,[]);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
-  console.log('PASS: offline real PDFs automatically produce an unverified source-backed shell without manual input; saved reopening and conflicting elevation invalidation; no external requests.');
+  console.log('PASS: offline real PDFs automatically produce an unverified source-backed shell without manual input; saved reopening, worker cancellation and conflicting elevation invalidation; no external requests.');
  }finally{clearTimeout(timer);await browser.close()}
 }
 main().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>server.close());
