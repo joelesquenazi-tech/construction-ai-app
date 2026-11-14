@@ -115,9 +115,19 @@
         // The text boxes must refer to the EXACT locally rendered page size.
         if(expectedPixels&&(width!==expectedPixels.width||height!==expectedPixels.height))
           throw Error('Rendered PDF page dimensions changed. Re-import the drawing before scanning.');
-        const content=await page.getTextContent({
-          includeMarkedContent:false,disableNormalization:false
-        });
+        // Use the stream reader directly: WebKit may expose ReadableStream
+        // without the async iterator used by PDF.js getTextContent.
+        const reader=page.streamTextContent({includeMarkedContent:false,
+          disableNormalization:false}).getReader();
+        const content={items:[]};
+        try {
+          while(true){
+            check();
+            const {done,value}=await reader.read();
+            if(done)break;
+            content.items.push(...value.items);
+          }
+        } finally {reader.releaseLock()}
         check();
         return {
           items:content.items.filter(item=>item&&typeof item.str==='string'),
