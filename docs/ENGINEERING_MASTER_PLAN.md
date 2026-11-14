@@ -114,12 +114,13 @@ Keep existing user data safe; migrations require backup/recovery.
 Do not mark a stage complete without demonstrated tests.
 When user asks for the next batch, start at Stage 0 then advance only after exit gate is met.
 
-## Immediate next batch — Stage 0
-1. Audit repositories and actual app drawing/model flow; list real capabilities vs stubs.
-2. Define canonical geometry/data schema and coordinate units.
-3. Create one-room ground-truth fixture and measurement acceptance checklist.
-4. Add automated tests for scale and source-coordinate transforms.
-5. Identify the smallest implementation to create first actual wall geometry from a verified line.
+## Immediate priority — complex-room interpretation (2026-11-14)
+
+User-approved focus: accurately interpret real, complex rooms with minimal routine input. The rectangular shell is a regression fixture, not the product acceptance target. This priority supersedes earlier immediate-next-batch entries; historical progress logs remain evidence of past work only.
+
+Follow [COMPLEX_ROOM_INTERPRETATION.md](COMPLEX_ROOM_INTERPRETATION.md). Start with automatic view separation and source ownership, then evidence-linked vision interpretation, multi-view reconciliation and deterministic complex geometry. Advance through measured gates, not additional demonstrations of manually supplied geometry.
+
+No routine tracing, scale entry, room-dimension entry or per-wall confirmation. Missing recognition is an engine limitation; missing or conflicting source information is an unresolved condition. Preserve this distinction in the app.
 
 ## Provider-independent execution contract (revised 2026-10-21; supersedes offline-only requirement)
 - The core drawing-to-verified-3D product must not require ChatGPT, OpenAI API, a third-party hosted LLM, cloud OCR provider, or other externally controlled AI service to function.
