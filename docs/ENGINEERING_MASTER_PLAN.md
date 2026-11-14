@@ -15,6 +15,14 @@ Turn real architectural and MEP construction drawings into an accurate, editable
 7. Prove one room end to end, then scale to floors/buildings and MEP.
 8. No automatic RFI submission; only flag possible coordination/RFI needs.
 
+## Response-time priority — approved direction, 2026-11-02
+
+Responsiveness is a release requirement. Heavy vision/reconstruction must not be assumed to run interactively on an iPad, Raspberry Pi or a particular desktop GPU. Prefer fast local viewing, editing and extraction, with interchangeable background inference on a workstation or operator-controlled GPU server. Evaluate an explicitly approved managed service as an optional route using nonconfidential fixtures first; no private drawing upload or provider commitment is authorized by this roadmap amendment.
+
+Use staged, source-linked results, bounded jobs, incremental reprocessing and versioned caching. Model responses remain proposals; deterministic checks and superintendent review govern verification. Timing targets, benchmark protocol, privacy boundaries and reordered work are in [RESPONSIVE_PROCESSING_PLAN.md](RESPONSIVE_PROCESSING_PLAN.md). These are planned requirements, not measured performance claims. This amendment supersedes any earlier assumption that heavy local inference is the normal interactive path; provider independence and essential offline access remain requirements.
+
+**2026-11-05 implementation:** optional import/scan timing, repeatable actual offline PDF/OCR benchmarks and a local dimension-processing worker. The baseline identified a main-thread bottleneck; synthetic before/after results are documented in [SCAN_PERFORMANCE.md](SCAN_PERFORMANCE.md). Full vision/room timing and target-device acceptance remain open. Next is the versioned/cancellable background-job contract.
+
 ## Development stages and exit gates
 ### Stage 0 — Baseline and test corpus
 - **Planned feature-checklist fixtures:** include documented/missed/partial coves, tray ceilings, soffits, ceiling and base reveals, duplicate instances, multiple profiles, source revisions, and expected host-component changes. Ground truth must cover feature presence, provenance, geometry, and negative/unknown cases.
@@ -106,12 +114,13 @@ Keep existing user data safe; migrations require backup/recovery.
 Do not mark a stage complete without demonstrated tests.
 When user asks for the next batch, start at Stage 0 then advance only after exit gate is met.
 
-## Immediate next batch — Stage 0
-1. Audit repositories and actual app drawing/model flow; list real capabilities vs stubs.
-2. Define canonical geometry/data schema and coordinate units.
-3. Create one-room ground-truth fixture and measurement acceptance checklist.
-4. Add automated tests for scale and source-coordinate transforms.
-5. Identify the smallest implementation to create first actual wall geometry from a verified line.
+## Immediate priority — complex-room interpretation (2026-11-14)
+
+User-approved focus: accurately interpret real, complex rooms with minimal routine input. The rectangular shell is a regression fixture, not the product acceptance target. This priority supersedes earlier immediate-next-batch entries; historical progress logs remain evidence of past work only.
+
+Follow [COMPLEX_ROOM_INTERPRETATION.md](COMPLEX_ROOM_INTERPRETATION.md). Start with automatic view separation and source ownership, then evidence-linked vision interpretation, multi-view reconciliation and deterministic complex geometry. Advance through measured gates, not additional demonstrations of manually supplied geometry.
+
+No routine tracing, scale entry, room-dimension entry or per-wall confirmation. Missing recognition is an engine limitation; missing or conflicting source information is an unresolved condition. Preserve this distinction in the app.
 
 ## Provider-independent execution contract (revised 2026-10-21; supersedes offline-only requirement)
 - The core drawing-to-verified-3D product must not require ChatGPT, OpenAI API, a third-party hosted LLM, cloud OCR provider, or other externally controlled AI service to function.
@@ -468,3 +477,83 @@ Define a versioned, dependency-free feature catalog and JSON instance schema wit
 - Added source-aligned PDF viewport text transform tests (horizontal/rotated/clipped/invalid) and a synthetic-PDF optional browser smoke test that checks original PDF bytes/text without an external call; no private client drawing is used in tests.
 - Preserves source hierarchy **project drawings, details and specs → project owner/architect conventions → reviewed general USACE/VA clue rules**. Text extraction is not dimension association, classification, code approval or automatic 3D geometry.
 - **Next batch:** package offline local OCR workers/models and benchmark text accuracy from sample approved raster/PDF elevations; associate labels with geometry and rule evidence, while retaining per-value source provenance. Add explicit review explanations when rule hypotheses conflict with the project legend. See `docs/PDF_TEXT_FIRST.md`.
+
+## Progress log — 2026-10-28 — Offline OCR packaging candidate (Stage 1)
+
+- Packages pinned Tesseract.js 5.1.1, core 5.1.1 with all WASM variants, and compressed English data locally. Worker, core and language paths explicitly use same-origin bundled assets. Removes runtime CDN initialization and its internet-consent prompt; native PDF text remains the preferred route.
+- Service-worker version advances; installation caches the complete OCR bundle atomically. Missing local assets must fail visibly instead of falling back to internet hosts. Existing finding-replacement review and source/room checks are retained.
+- Node regressions pass. Adds a real-model Chromium test: install app, turn browser network offline, reload, import synthetic raster, run OCR and assert recognized text/pending results and no external requests. This real offline OCR browser test passed locally on Chromium: the fixture text was recognized after offline reload with no external requests. GitHub push and pull-request CI passed for PR #56, including the real offline OCR test (run 40763280647).
+- Approximately 41 MB added to installation. Physical iPad Safari and Raspberry Pi performance, storage eviction recovery, and representative real-drawing accuracy remain OPEN. Vision inference/PR #54 is separate and remains a draft.
+- Next: measure OCR on permitted raster/elevation fixtures and bind text/dimension evidence to source geometry; do not promote text extraction to verified scale or 3D geometry.
+
+
+## Progress log — 2026-10-30 — Source-linked dimension evidence and local evaluation candidate (Stage 0/1)
+
+- Builds on offline OCR draft PR #56 without merging or deploying it. Native PDF text remains first; image OCR now retains text rectangles. Every new scan finding includes exact original-file and rendered-page SHA-256 fingerprints, project/room, sheet/page, filename and pixel dimensions. Unknown revision remains null.
+- Parses standalone, explicitly unit-marked imperial/metric measurements into canonical metres. Bounded local raster analysis proposes horizontal/vertical dimension spans only with two perpendicular witness crossings; interrupted baselines are supported. Multiple plausible spans remain ambiguous; missing evidence remains unassociated. All readings and geometry remain unverified.
+- Selecting a measurement shows its source text box and, when unambiguous, possible dimension endpoints over the original page. Confirm/Reject and Undo remain reading decisions. Changed readings or source bytes suppress old geometry overlays; late analysis from a replaced source is discarded, including replacements with the same filename, dimensions and last-modified value. Scale, wall decisions and model geometry are not changed.
+- Adds `tools/evaluate-dimensions.cjs` for private/local, explicitly exhaustive full-page or region ground truth. Reports reading/span precision, recall, false positives, omissions and matched endpoint error with one-to-one matching. Requires exact source identity and independently chosen tolerances. Human corrections/rejections cannot inflate automatic detector scores. No drawing bytes or private annotations are uploaded or committed.
+- **Verified locally:** 126 Node unit/regression tests; real bundled OCR after offline reload on a synthetic raster, expected span endpoints within three original pixels, correction/Undo/reload and no external requests; synthetic offline native PDF page 2, retained provenance, unchanged calibration/wall stores, stale overlay suppression and late-result discard. JavaScript syntax and diff checks pass. GitHub pull-request CI passed for PR #58, including both offline browser checks (run 41158930369).
+- **OPEN:** Stage 0 permissioned real-drawing corpus, independent annotations/tolerances and measured recognition accuracy; physical iPad Safari and Raspberry Pi memory/latency; individual drawing viewport ownership, diagonal/arrow-only/vector dimensions, independent automatic scale verification, plan/elevation registration, and M1. Synthetic passes do not close these gates. Vision PR #54 remains a separate draft with current-main conflicts.
+- **Next gate:** independently annotate all applicable dimensions in an explicit region of one permitted real sheet, run the local evaluator, inspect false matches/omissions and improve extraction/view ownership before enabling scale application. Details and ground-truth format: [DIMENSION_EVIDENCE.md](DIMENSION_EVIDENCE.md).
+
+
+## Progress log — 2026-11-01 — Touch accuracy check and first private dimension pilot (Stage 0)
+
+- Adds an optional **Advanced: check recognition accuracy** workflow to Drawings. It supports one marked region, source-only label boxes and dimension endpoints, shared 4× magnifier, zoom/scroll, structured feet/inches/fractions or metric entry, independent coverage confirmation and source-pixel tolerances. Detector findings are hidden and never copied into the truth records. Normal automatic-first drawing setup remains the product requirement.
+- Saves annotations in a separate source-scoped IndexedDB store, with exact file/page-raster identity and project/room/page/revision scope, bounded Undo, confirmation invalidation and transactional revision guards across tabs. Replaced drawings start separate checks; room/sheet changes close the current dialog. Existing scan reviews, scale, walls and 3D stores are not changed.
+- Moves the existing evaluator into a shared browser/Node module and keeps its previous CLI contract. A single exported private bundle includes independently annotated truth, the exact original detector findings and a report; the CLI recomputes its score. Human reading corrections/rejections do not inflate detector performance. No private drawing bytes are included in an export or sent to inference services.
+- **Private development pilot:** a region of a user-uploaded real elevation PDF was visually annotated before detector output was inspected. Native PDF text read **2/2** linear measurements within the pilot label tolerance; line association matched **0/2** spans. The raw source, text, annotations, hashes and full results remain private. This is a narrow failure-reproduction result, not a representative accuracy claim or superintendent-confirmed ground truth.
+- **Verification:** new unit and offline touch-browser acceptance checks cover independent annotations, manual units, omissions and negative cases, original predictions, Undo/reload, region/source bounds, zoomed handle placement, stale-tab protection, room isolation and unchanged existing stores. Final counts/CI are recorded in the review description after testing.
+- **OPEN:** superintendent confirmation of pilot annotations and source-specific tolerances; broader permitted real-sheet corpus; physical iPad Safari and Raspberry Pi latency/memory; source viewport ownership, reliable dimension endpoints and independently checked automatic scale; cross-view alignment and M1. Vision PR #54 remains separate.
+- **Next:** reproduce chained/tick-ended and short-span failures in varied synthetic fixtures, improve association, compare against the unchanged private baseline and additional permitted regions, and perform physical iPad interaction testing. Guide: [IPAD_ACCURACY_CHECK.md](IPAD_ACCURACY_CHECK.md).
+
+
+## Progress log — 2026-11-01 — Dimension endpoint association, follow-up candidate (Stage 0/1)
+
+- Reproduces the earlier chained/short dimension failure with generic synthetic linework. Version 2 identifies supported diagonal slash marks, keeps perpendicular witness intersections, and uses consecutive markers to split a chain into distinct spans. A short member cannot borrow the full chain's endpoints. Text-overlapping markers, one-sided spurs, cross decorations, continuing diagonal hatch strokes and under-labeled dense repetitions are rejected or left unresolved; competing spans remain ambiguous.
+- Preserves more source detail within a bounded analysis raster (maximum 2,400 pixels per side and 4.2 million pixels total), with source-axis-specific coordinate mapping. A shared size function enforces these limits in browser and core. Endpoint work is bounded to one million search positions and existing candidate/density caps remain. These bound analysis work, not total browser RAM; physical device performance remains open.
+- Records algorithm version, analysis dimensions and per-endpoint support in original page pixels. Compact off-baseline pixel marks receive an explicit review flag. A supported pair is still an unverified proposal. The drawing review explanation now describes endpoint evidence accurately; scale/3D confirmation is not granted by this association.
+- **Private before/after pilot:** same drawing bytes, same two independent annotations and same preset pixel tolerances. Measurement readings remain **2/2**; matched dimension spans improve from **0/2 to 2/2**, with no extra span proposal inside the annotated region. Maximum matched endpoint error is within the original 3-pixel pilot tolerance. Original source text, drawing bytes, hashes, exact coordinates and full results stay private. This small development benchmark is not a held-out accuracy estimate or superintendent-confirmed ground truth.
+- Synthetic tests cover horizontal/vertical chains, both tick slopes, extension lines, stroke thickness, short spans, ambiguity, negative linework/text/hatching cases, compact marks and coordinate/size bounds. A new offline browser check uses actual synthetic PDF text/raster rendering and verifies long/short tick-ended members, saved original-pixel support and unchanged model/calibration stores. Existing real OCR, native PDF/source-change and touch accuracy-check regressions are also run. Final results are recorded in the review description.
+- **OPEN:** broader and independently confirmed real-drawing corpus, agreed source-quality tolerances, physical iPad Safari/Raspberry Pi latency/memory, reliable drawing viewport ownership, arrowhead-only/diagonal dimension support, independent automatic scale checks, cross-view registration and M1.
+- **Next:** validate additional permitted regions and device interaction, inspect omissions/false matches beyond the pilot region, and add drawing-view ownership before connecting reliable dimension evidence to automatic scale reasoning. Guide: [ENDPOINT_ASSOCIATION_V2.md](ENDPOINT_ASSOCIATION_V2.md).
+
+
+## Roadmap amendment — 2026-11-02 — Responsive processing before hardware/model commitment
+
+- User priority: avoid long waits in normal use. A GPU demonstration does not establish the latency of this app; measure the actual drawing workflow rather than choosing hardware by model/GPU reputation.
+- Separate immediate local interaction from background analysis. Use native PDF extraction and deterministic tools first where useful, and bounded specialist vision calls for unresolved regions. A full-sheet language/vision-model call is not required for each tap, edit, or room change.
+- Make workstation/operator-controlled GPU processing an interchangeable heavy-analysis route. Benchmark explicitly approved managed processing as an optional candidate using synthetic/public data. Paid services, infrastructure deployment and private drawing transfers require their own concrete authorization; none are performed here.
+- Add provisional p95 budgets for UI response, cached results, first useful region evidence and a reference one-room job, with honest cold/warm, network, queue, accuracy, memory and cost reporting. Do not label token streaming or an unverified preview as a completed reconstruction.
+- **Next engineering batch RP-1:** instrument the existing pipeline and UI responsiveness, define a representative reference workload, and benchmark the current local stages before selecting a vision model or deployment route. Then implement cancellable/versioned jobs and incremental cached processing. Stage 0 source-truth work continues alongside these measurements.
+- **OPEN:** all latency targets and backend comparisons; physical iPad/Pi measurements; real-model accuracy; remote authentication/privacy/retention; independent scale, viewport ownership, cross-view registration and M1. Existing two-label accuracy results and passing correctness tests are not performance benchmarks.
+- No runtime model, hosting, data-sharing policy or production deployment changed in this documentation batch. Details: [RESPONSIVE_PROCESSING_PLAN.md](RESPONSIVE_PROCESSING_PLAN.md).
+
+## Progress log — 2026-11-05 — Measured responsiveness and local dimension worker (RP-1 / early RP-3)
+
+- Adds optional, bounded in-memory import/Scan timings and a Settings export. Records exact-source checks, PDF/OCR work, line association, review wait, save/DOM, paint opportunities, outcome counts, browser long tasks and coarse JS heap samples. Drawing text, pixels, filenames, identity hashes, coordinates and project/room IDs are excluded from diagnostics. Unsupported vision/remote/cache/device-memory/cost stages remain explicit gaps.
+- Adds repeatable actual offline PDF/OCR benchmarks: three fresh contexts and 20 repeated import/scan pairs per route, expected source-pixel reading/span assertions, idle and under-scan trusted touch feedback, and descriptive p50/p95 with sample counts. Raw synthetic reports and runtime hashes are versioned with the protocol.
+- The larger PDF baseline revealed main-thread threshold/association blocking. A bounded short-lived local worker now performs image decode and those pixel/line operations where supported, with exact worker/fallback findings parity on both synthetic fixtures. Existing source guards and review semantics remain. Worker failures/timeouts retain old findings; no remote fallback is introduced.
+- Same larger synthetic PDF, 20 repeated scans per implementation: total p95 386 → 270 ms; touch-to-next-paint-opportunity p95 178 → 33 ms; observed main-thread long tasks 20 → 0. These are shared-host Chromium measurements, not iPad/Pi or full vision/room performance. Current repeated OCR total p95 is 521 ms; first-context OCR p95 is 901 ms with three samples.
+- Verification includes Node regressions, actual offline OCR/native PDF and source guards, independent touch annotations, tick-ended chain source coordinates, worker error retention, optional diagnostic export/outcomes/privacy, and capability fallback parity. Final local and CI results are recorded in the draft review after testing.
+- **Next:** RP-2 source-versioned, cancellable background jobs and recovery; broader permitted real regions and physical-device timing/memory. No heavy vision model, GPU/server, paid route or private upload is selected. M1 remains OPEN. Protocol: [SCAN_PERFORMANCE.md](SCAN_PERFORMANCE.md).
+
+## Progress log — 2026-11-07 — Cancellable local scans (RP-2 local slice)
+
+Drawing scans can be cancelled before saving. Local recovery records are tied to the original file, page raster, room and job version. After an interruption, the user can restart from the beginning on the same drawing. A second current tab cannot run another scan simultaneously. Saved reviews changed during processing prevent replacement. See [SCAN_JOBS.md](SCAN_JOBS.md). Durable remote execution and checkpoint resume remain open.
+
+## Progress log — 2026-11-10 — Raw OCR cache and consolidated device acceptance
+
+- RP-4 first slice: bounded private raw OCR reuse keyed by source identity and extraction version; rerun current knowledge matching/dimension association and retain replacement/source/review guards. Cached OCR never restores confirmed geometry or corrections.
+- Added reload/parity and declined-replacement browser coverage; source/revision/version invalidation, bounds, corruption/storage failures and reset-generation unit cases. The extraction benchmark stays explicitly uncached.
+- Continue independent implementation and automated checks before requiring Joel on the iPad. Prepared one combined physical-device checklist in DEVICE_ACCEPTANCE_SESSION.md; it has not been executed.
+- Open: selected-region pipeline, complete analysis cache, real vision accuracy/speed, independently verified drawing corpus, automatic scale/cross-view reconciliation and M1. This batch does not claim a released build or physical-device verification.
+- Added a WebKit touch-viewport CI gate for offline actual OCR, review/Undo/reload and raw cache parity. This is browser compatibility coverage; physical Safari/iPad performance remains untested.
+- The WebKit gate exposed `UnknownError: Error preparing Blob/File data to be stored in object store`. Added an exact-byte IndexedDB fallback for drawing and model-reference files, preserving MIME/name/time and legacy Blob reads. PDF original and page previews remain one atomic write batch; quota errors are not retried as compatibility errors.
+
+## Priority correction — 2026-11-12 — Automatic generation must be the default
+
+Joel's app screenshot demonstrates that the primary 3D path still demanded manual wall traces. That does not meet the automatic-first requirement. Prioritize connecting saved drawings to actual supported preliminary geometry; no routine tracing, scale/dimension entry or per-wall confirmation. Continue independent implementation before physical iPad acceptance. Questions are for genuinely missing/conflicting source information, not a replacement for unfinished recognition.
+
+Added a narrow automatic rectangular wall-shell path, guarded by room labels, matched inside dimensions in both axes, dimension agreement, paired boundaries and consistent named-elevation height notes. The conceptual demo/manual calibration/traces remain optional advanced tools. Actual automatic output is explicitly preliminary with openings/details unresolved; unsupported layouts receive an engine-limit explanation. Source fingerprints and separate output storage protect prior corrections. See AUTOMATIC_ROOM.md for limits and acceptance cases. This does not complete full vision interpretation, arbitrary plan reconstruction or M1.
