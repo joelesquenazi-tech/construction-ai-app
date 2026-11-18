@@ -53,3 +53,17 @@ test('raster-to-analysis pipeline links a separately segmented title strip',()=>
  const r=v.analyze(rows,[{id:'title',text:'TREATMENT FLOOR PLAN',bbox:{x:20,y:340,width:200,height:20}}],{...source,width_px:800,height_px:600});
  assert.equal(r.regions.length,2);assert.equal(r.detached_title_links[0].status,'candidate_unverified');assert.deepEqual(r.detached_title_links[0].region_ids,['region-0']);assert.equal(r.geometry_ready,false);
 });
+test('thin margin frame does not merge separated drawings and source pixels are preserved',()=>{
+ const rows=Array.from({length:300},()=>new Uint8Array(400));
+ for(let x=5;x<395;x++)rows[5][x]=rows[294][x]=1;
+ for(let y=5;y<295;y++)rows[y][5]=rows[y][394]=1;
+ for(let y=40;y<120;y++){rows[y].fill(1,30,150);rows[y].fill(1,220,350)}
+ const before=Buffer.concat(rows.map(r=>Buffer.from(r))),r=v.propose(rows,{...source,width_px:400,height_px:300});
+ assert.equal(r.segmentation_only_suppressed_lines.length,4);assert.equal(r.regions.length,2);
+ assert.deepEqual(Buffer.concat(rows.map(r=>Buffer.from(r))),before);
+});
+test('thick margin content and long interior lines are not suppressed',()=>{
+ const rows=Array.from({length:300},()=>new Uint8Array(400));
+ for(let y=0;y<300;y++){rows[y].fill(1,5,12);rows[y][200]=1}
+ const r=v.propose(rows,{...source,width_px:400,height_px:300});assert.equal(r.segmentation_only_suppressed_lines.length,0);
+});

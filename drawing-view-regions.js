@@ -12,6 +12,22 @@ function propose(rows,source){
  const h=rows?.length,w=rows?.[0]?.length;
  if(!Array.isArray(rows)||!w||!h||w>2400||h>2400||w*h>4200000||rows.some(r=>r.length!==w))throw Error('Expected bounded rectangular raster');
  if(!source||typeof source.sha256!=='string'||!source.sha256||!Number.isInteger(source.page)||source.page<1||!Number.isFinite(source.width_px)||!Number.isFinite(source.height_px)||source.width_px<=0||source.height_px<=0)throw Error('Source identity and dimensions required');
+ // Suppress only thin, almost page-spanning margin lines in a private copy.
+ // Original pixels remain available to wall/dimension extraction.
+ const original=rows,copy=rows.map(r=>Uint8Array.from(r)),suppressed=[];
+ for(const axis of ['x','y']){
+  const major=axis==='x'?w:h,minor=axis==='x'?h:w,eligible=[];
+  for(let k=0;k<major;k++){
+   if(k>major*.08&&k<major*.8)continue;
+   let count=0;for(let j=0;j<minor;j++)if(original[axis==='x'?j:k][axis==='x'?k:j])count++;
+   if(count>=minor*.85)eligible.push(k);
+  }
+  for(let i=0;i<eligible.length;){let end=i+1;while(end<eligible.length&&eligible[end]===eligible[end-1]+1)end++;
+   if(end-i<=4)for(let n=i;n<end;n++){const k=eligible[n];suppressed.push({axis,index:k});for(let j=0;j<minor;j++)copy[axis==='x'?j:k][axis==='x'?k:j]=0}
+   i=end;
+  }
+ }
+ rows=copy;
  const regions=[],minGap=Math.max(8,Math.ceil(Math.min(w,h)*.015));
  function split(b,depth){
   let x0=b.x+b.width,y0=b.y+b.height,x1=-1,y1=-1;
@@ -37,7 +53,7 @@ function propose(rows,source){
   regions.push({id:'region-'+regions.length,bbox:{x:b.x*sx,y:b.y*sy,width:b.width*sx,height:b.height*sy},source:{...source},status:'candidate_unverified',method:'whitespace',type:'unknown'});
  }
  split({x:0,y:0,width:w,height:h},0);
- return {version:1,regions,issues:['Whitespace regions may split one view or combine multiple views; semantic validation is required before geometry.']};
+ return {version:2,regions,segmentation_only_suppressed_lines:suppressed,issues:['Whitespace regions may split one view or combine multiple views; semantic validation is required before geometry.']};
 }
 function associate(regions,findings,source){
  if(!Array.isArray(regions)||regions.length>64||!Array.isArray(findings)||findings.length>2500)throw Error('View evidence limit exceeded');
@@ -95,5 +111,5 @@ function analyze(rows,findings,source){
  });
  return {...proposal,regions,assignments,detached_title_links:detachedTitles(regions,findings,source),geometry_ready:false};
 }
-return {version:3,propose,associate,classify,titleType,detachedTitles,analyze};
+return {version:4,propose,associate,classify,titleType,detachedTitles,analyze};
 });
