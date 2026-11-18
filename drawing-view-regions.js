@@ -27,7 +27,7 @@ function propose(rows,source){
      if(i<length)for(let j=0;j<(axis==='x'?b.height:b.width);j++)if(rows[b.y+(axis==='y'?i:j)][b.x+(axis==='x'?i:j)]){ink=true;break}
      if(!ink&&i<length){if(start<0)start=i;continue}
      if(start>=0){const gap=i-start;
-      if(gap>=minGap&&start>=24&&length-i>=24&&(!best||gap>best.gap))best={axis,start,end:i,gap};start=-1;
+      if(gap>=minGap&&start>=(axis==='y'?4:24)&&length-i>=(axis==='y'?4:24)&&(!best||gap>best.gap))best={axis,start,end:i,gap};start=-1;
      }
     }
    }
@@ -54,6 +54,31 @@ function titleType(text){
  if(!/^(?:[A-Z0-9][A-Z0-9 '&/().-]* )?(?:REFLECTED CEILING PLAN|FLOOR PLAN|RCP|ELEVATIONS?|SECTION|DETAIL|SCHEDULE)(?: [A-Z0-9.-]+)?$/.test(t))return 'unknown';
  return classify(t);
 }
+// Detached title links are layout proposals, not proof of view ownership.
+function detachedTitles(regions,findings,source){
+ const assignments=associate(regions,findings,source),links=[];
+ findings.forEach((f,index)=>{
+  const type=titleType(f.text),t=f.bbox,a=assignments[index];
+  if(type==='unknown'||!valid(t,source.width_px,source.height_px)||a.status==='ambiguous')return;
+  const own=regions.find(r=>r.id===a.region_ids[0]);
+  // A short text strip may be split from its graphic. A title already inside
+  // a substantial graphic region does not need a detached association.
+  if(own&&own.bbox.height>t.height*3)return;
+  const matches=regions.filter(r=>{
+   const b=r.bbox,gap=t.y-(b.y+b.height);
+   if(r===own||b.height<t.height*4||b.width<t.width||gap<0||gap>Math.min(source.height_px*.06,t.height*6))return false;
+   if(t.x<b.x||t.x+t.width>b.x+b.width)return false;
+   const aligned=Math.abs(t.x-b.x)<=t.height*2||Math.abs(t.x+t.width/2-(b.x+b.width/2))<=t.height*2;
+   if(!aligned)return false;
+   // Do not leap over another region between the graphic and its caption.
+   return !regions.some(o=>o!==r&&o!==own&&o.bbox.y<t.y&&o.bbox.y+o.bbox.height>b.y+b.height&&o.bbox.x<t.x+t.width&&o.bbox.x+o.bbox.width>t.x);
+  });
+  links.push({finding_id:f.id,type,bbox:{...t},region_ids:matches.map(r=>r.id),status:matches.length===1?'candidate_unverified':matches.length?'ambiguous':'unassigned',method:'below_aligned_title',source:{...source}});
+ });
+ // Multiple candidate captions for a graphic cannot establish its identity.
+ for(const link of links)if(link.status==='candidate_unverified'&&links.some(other=>other!==link&&other.region_ids.includes(link.region_ids[0])))link.status='ambiguous';
+ return links;
+}
 function analyze(rows,findings,source){
  const proposal=propose(rows,source),assignments=associate(proposal.regions,findings,source);
  const regions=proposal.regions.map(region=>{
@@ -68,7 +93,7 @@ function analyze(rows,findings,source){
   return {...region,type:titles.length===1?titles[0].type:'unknown',title_evidence:titles,
    issues:titles.length===1?['Region boundaries require semantic validation']:titles.length?['Multiple view titles in one region']:['No unambiguous contained view title']};
  });
- return {...proposal,regions,assignments,geometry_ready:false};
+ return {...proposal,regions,assignments,detached_title_links:detachedTitles(regions,findings,source),geometry_ready:false};
 }
-return {version:2,propose,associate,classify,titleType,analyze};
+return {version:3,propose,associate,classify,titleType,detachedTitles,analyze};
 });

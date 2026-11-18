@@ -25,3 +25,31 @@ test('actual automatic worker produces diagnostic view evidence on raster fallba
  await context.onmessage({data:{rows:raster(),source,findings:[{id:'label',text:'FLOOR PLAN',bbox:{x:30,y:30,width:100,height:10}}]}});
  assert.equal(result.error,undefined);assert.equal(result.viewAnalysis.regions[0].type,'plan');assert.equal(result.viewAnalysis.geometry_ready,false);assert(closed);
 });
+const region=(id,x=20,y=10,width=160,height=100)=>({id,bbox:{x,y,width,height},source});
+const caption=(id='title',x=20,y=115,text='TREATMENT FLOOR PLAN')=>({id,text,bbox:{x,y,width:100,height:10}});
+test('links a detached left-aligned title below one graphic with provenance',()=>{
+ const regions=[region('plan'),region('caption',20,115,100,10)],findings=[caption()];
+ const before=JSON.stringify({regions,findings}),links=v.detachedTitles(regions,findings,source);
+ assert.equal(links[0].status,'candidate_unverified');assert.deepEqual(links[0].region_ids,['plan']);assert.equal(links[0].source.sha256,'test');assert.equal(JSON.stringify({regions,findings}),before);
+});
+test('detached captions do not cross intervening content or attach to distant views',()=>{
+ assert.equal(v.detachedTitles([region('plan'),region('block',20,111,100,3)],[caption()],source)[0].status,'unassigned');
+ assert.equal(v.detachedTitles([region('plan')],[caption('far',20,160)],source)[0].status,'unassigned');
+ assert.equal(v.detachedTitles([region('plan')],[caption('offset',190)],source)[0].status,'unassigned');
+});
+test('competing detached captions and overlapping graphics stay ambiguous',()=>{
+ const links=v.detachedTitles([region('plan')],[caption('a'),caption('b',20,120,'TREATMENT ELEVATION')],source);assert(links.every(x=>x.status==='ambiguous'));
+ assert.equal(v.detachedTitles([region('a'),region('b')],[caption()],source)[0].status,'ambiguous');
+});
+test('contained titles and prose references cannot become detached captions',()=>{
+ assert.equal(v.detachedTitles([region('plan')],[caption('inside',20,40)],source).length,0);
+ assert.equal(v.detachedTitles([region('plan')],[caption('ref',20,115,'SEE FLOOR PLAN')],source).length,0);
+ assert.throws(()=>v.detachedTitles([region('plan')],[caption()],{...source,page:2}));
+});
+test('raster-to-analysis pipeline links a separately segmented title strip',()=>{
+ const rows=Array.from({length:300},()=>new Uint8Array(400));
+ for(let y=10;y<160;y++)rows[y].fill(1,10,160);
+ for(let y=170;y<180;y++)rows[y].fill(1,10,110);
+ const r=v.analyze(rows,[{id:'title',text:'TREATMENT FLOOR PLAN',bbox:{x:20,y:340,width:200,height:20}}],{...source,width_px:800,height_px:600});
+ assert.equal(r.regions.length,2);assert.equal(r.detached_title_links[0].status,'candidate_unverified');assert.deepEqual(r.detached_title_links[0].region_ids,['region-0']);assert.equal(r.geometry_ready,false);
+});
