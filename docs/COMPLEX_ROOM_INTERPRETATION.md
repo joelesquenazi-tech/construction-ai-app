@@ -111,3 +111,11 @@ Added `drawing-view-lines.js`, called by the automatic worker for titled regions
 195 unit tests pass, including neighboring plan/elevation isolation, exact source-coordinate mapping, source preservation, clipped boundaries, stale sources and actual-worker execution. Browser/device verification and general drawing accuracy remain open. Changes are draft only.
 
 Real-sheet line extraction result: all four elevation regions exceed the detector's current pair-count limit and therefore return zero candidates with `limited: true`. Region separation/title association succeeded on this example; architectural line interpretation did not. Do not loosen the limit and describe the resulting pairs as walls. Next work must address semantic line classification and evidence-based filtering, with these dense regions retained as failure cases.
+
+## Architectural evidence checkpoint — explicit text categories
+
+Added `architectural-evidence.js` to worker diagnostics and offline assets. Categorizes explicit wall/partition, door, window, millwork, ceiling and finish vocabulary; preserves multi-category notes such as stone countertops. Dimension text and view titles are separate. Common reference and removal/existing/negative phrases receive interpretation flags. Unrecognized tags stay unknown; neither a note nor its label rectangle establishes element presence, extent or verified geometry. Source ownership uses existing region containment and ambiguous/crossing notes remain unassigned.
+
+Local development-sheet evaluation finds explicit millwork and ceiling evidence in all four elevation regions, wall notes in two and a door note in one. Unknown text counts per elevation remain 53, 44, 26 and 34. These are counts of text clues, not element counts or accuracy scores; mixed categories can refer to the same note. No confidential source content is committed.
+
+199 unit tests pass, including mixed notes, dimensions/titles, references and conditional wording, source identity and no geometry promotion. This is a vocabulary baseline, not vision-based architectural recognition. Dense line extraction remains unresolved. Next: link callout leaders and tags to graphic elements with evidence, then evaluate a replaceable vision adapter against this baseline. No automatic complex-room wall reconstruction or release is claimed.
