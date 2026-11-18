@@ -73,3 +73,11 @@ One real complex room set produces a dimensionally checked preliminary model wit
 ## Deferred while this is open
 
 Unrelated styling, photorealism, VR/MR and broad MEP expansion. Continue only infrastructure work that directly enables drawing interpretation, verification, data preservation or delivery. Do not train a custom model or buy hardware before establishing the baseline and measured gap.
+
+## CR-1 development checkpoint — 2026-11-17
+
+Added `drawing-view-regions.js`, an isolated bounded whitespace-region proposal and evidence-association module. Keeps original page coordinates and source identity; rejects stale regions; crossing/uncontained evidence stays unassigned and overlapping ownership stays ambiguous. Title hints distinguish explicit floor-plan/RCP/elevation/section/detail/schedule text; mixed labels remain unknown.
+
+Six new unit tests pass; full unit suite: 182 passed. Includes transformed coordinates, neighboring views, crossing dimensions, overlapping assignments, revisions, blank/connected sheets and bounds. These are synthetic tests only.
+
+Not connected to production reconstruction yet. Whitespace can split a single view or merge several, especially with sheet borders, dimensions or title blocks. Outputs are proposals, never verified view boundaries. Next: combine raster regions with title/reference evidence and evaluate real sheet ownership before feeding cropped views to wall detection. No new automatic wall tracing or live deployment is claimed by this checkpoint.
