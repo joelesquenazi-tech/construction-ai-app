@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./dimension-evidence.js','./wall-proposals.js','./drawing-view-regions.js');
+importScripts('./dimension-evidence.js','./wall-proposals.js','./drawing-view-regions.js','./drawing-view-lines.js');
 self.onmessage=async({data})=>{
  let image,canvas;
  try{
@@ -18,6 +18,7 @@ self.onmessage=async({data})=>{
    }));
   }
   const viewAnalysis=self.ConstructionDrawingViews.analyze(rows,findings,source);
+  viewAnalysis.line_regions=self.ConstructionViewLines.extract(rows,viewAnalysis.regions,source);
   const report=self.ConstructionWallCandidates.detectWallCandidates(rows,{maxSeparation:65});
   // A truncated proposal set cannot prove there is only one room.
   if(report.stats.possiblePairs>36){self.postMessage({findings:[],candidates:[],limited:true,viewAnalysis});return}
