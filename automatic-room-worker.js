@@ -19,6 +19,7 @@ self.onmessage=async({data})=>{
   }
   const viewAnalysis=self.ConstructionDrawingViews.analyze(rows,findings,source);
   viewAnalysis.architectural_evidence=self.ConstructionArchitecturalEvidence.analyze(viewAnalysis.regions,findings,source);
+  viewAnalysis.leader_evidence=self.ConstructionArchitecturalEvidence.leaders(rows,viewAnalysis.regions,findings,source);
   viewAnalysis.line_regions=self.ConstructionViewLines.extract(rows,viewAnalysis.regions,source);
   const report=self.ConstructionWallCandidates.detectWallCandidates(rows,{maxSeparation:65});
   // A truncated proposal set cannot prove there is only one room.

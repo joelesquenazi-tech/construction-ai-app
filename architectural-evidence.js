@@ -28,5 +28,39 @@ function analyze(regions,findings,source){
   return {region_id:r.id,category_counts,unknown_text_count:items.filter(e=>e.kind==='unknown').length,geometry_ready:false};
  }),geometry_ready:false};
 }
-return {version:1,classify,analyze};
+function leaders(rows,regions,findings,source){
+ const report=analyze(regions,findings,source),segments=dimensions.segments(rows);
+ const notes=report.evidence.filter(e=>e.kind==='architectural_note'&&e.ownership==='candidate_unverified'&&!e.reference_only&&!e.condition_requires_interpretation);
+ if(segments.issue||segments.lines.length>12000||notes.length>256)return {links:[],limited:true,geometry_ready:false};
+ const sx=source.width_px/rows[0].length,sy=source.height_px/rows.length;
+ const inside=(p,b)=>p[0]>=b.x&&p[0]<=b.x+b.width&&p[1]>=b.y&&p[1]<=b.y+b.height;
+ const links=notes.map(note=>{
+  const box=note.label_bbox,region=regions.find(r=>r.id===note.region_ids[0]),paths=[];
+  segments.lines.forEach((line,i)=>{
+   if(line.end-line.start<20)return;
+   const a=line.axis==='h'?[line.start*sx,line.fixed*sy]:[line.fixed*sx,line.start*sy];
+   const b=line.axis==='h'?[line.end*sx,line.fixed*sy]:[line.fixed*sx,line.end*sy];
+   if(!inside(a,region.bbox)||!inside(b,region.bbox))return;
+   let near,far;
+   if(line.axis==='h'&&a[1]>=box.y&&a[1]<=box.y+box.height){
+    if(a[0]>=box.x+box.width&&a[0]-(box.x+box.width)<=6*sx){near=a;far=b}
+    else if(b[0]<=box.x&&box.x-b[0]<=6*sx){near=b;far=a}
+   }else if(line.axis==='v'&&a[0]>=box.x&&a[0]<=box.x+box.width){
+    if(a[1]>=box.y+box.height&&a[1]-(box.y+box.height)<=6*sy){near=a;far=b}
+    else if(b[1]<=box.y&&box.y-b[1]<=6*sy){near=b;far=a}
+   }
+   if(!near)return;
+   // Crossing another text box cannot establish a leader attachment.
+   const blocked=findings.some(f=>f.id!==note.finding_id&&dimensions.validBox(f.bbox,source.width_px,source.height_px)&&
+    (line.axis==='h'?a[1]>=f.bbox.y&&a[1]<=f.bbox.y+f.bbox.height&&b[0]>=f.bbox.x&&a[0]<=f.bbox.x+f.bbox.width:
+     a[0]>=f.bbox.x&&a[0]<=f.bbox.x+f.bbox.width&&b[1]>=f.bbox.y&&a[1]<=f.bbox.y+f.bbox.height));
+   if(!blocked)paths.push({segment_id:'stroke-'+i,points_px:[near,far],endpoint_px:far});
+  });
+  return {finding_id:note.finding_id,region_id:region.id,source:{...source},paths,
+   status:paths.length===1?'candidate_unverified':paths.length?'ambiguous':'unresolved',target_element_id:null};
+ });
+ for(const link of links)if(link.paths.some(p=>links.some(other=>other!==link&&other.paths.some(q=>q.segment_id===p.segment_id))))link.status='ambiguous';
+ return {links,limited:false,geometry_ready:false,limitations:['Straight horizontal/vertical strokes only; arrowheads, bent leaders and target elements are not resolved.']};
+}
+return {version:2,classify,analyze,leaders};
 });
