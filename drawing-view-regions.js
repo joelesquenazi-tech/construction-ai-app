@@ -47,5 +47,28 @@ function associate(regions,findings,source){
   return {finding_id:f.id,region_ids:matches.map(r=>r.id),status:matches.length===1?'candidate_unverified':matches.length?'ambiguous':'unassigned',title_type:classify(f.text)};
  });
 }
-return {version:1,propose,associate,classify};
+// Only complete title-shaped labels qualify. References in prose are not titles.
+function titleType(text){
+ const t=String(text||'').trim().toUpperCase().replace(/\s+/g,' ');
+ if(t.length>100||/\b(?:SEE|REFER|PER|MATCH|TYPICAL|SHOWN|ON|BY)\b/.test(t))return 'unknown';
+ if(!/^(?:[A-Z0-9][A-Z0-9 '&/().-]* )?(?:REFLECTED CEILING PLAN|FLOOR PLAN|RCP|ELEVATIONS?|SECTION|DETAIL|SCHEDULE)(?: [A-Z0-9.-]+)?$/.test(t))return 'unknown';
+ return classify(t);
+}
+function analyze(rows,findings,source){
+ const proposal=propose(rows,source),assignments=associate(proposal.regions,findings,source);
+ const regions=proposal.regions.map(region=>{
+  const titles=[];
+  assignments.forEach((a,i)=>{
+   if(a.status==='candidate_unverified'&&a.region_ids[0]===region.id){
+    const type=titleType(findings[i].text);
+    if(type!=='unknown')titles.push({finding_id:findings[i].id,type,bbox:{...findings[i].bbox}});
+   }
+  });
+  // Two labels of the same type can still be two views in one region.
+  return {...region,type:titles.length===1?titles[0].type:'unknown',title_evidence:titles,
+   issues:titles.length===1?['Region boundaries require semantic validation']:titles.length?['Multiple view titles in one region']:['No unambiguous contained view title']};
+ });
+ return {...proposal,regions,assignments,geometry_ready:false};
+}
+return {version:2,propose,associate,classify,titleType,analyze};
 });

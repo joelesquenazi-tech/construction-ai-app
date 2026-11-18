@@ -7,3 +7,21 @@ test('overlapping ownership remains ambiguous and stale sources fail',()=>{const
 test('blank, connected and dense sheets are never declared verified views',()=>{assert.equal(v.propose(Array.from({length:100},()=>new Uint8Array(200)),source).regions.length,0);const r=raster();r[50].fill(1);const p=v.propose(r,source);assert.equal(p.regions.length,1);assert.equal(p.regions[0].type,'unknown');assert(p.issues.length)});
 test('labels distinguish RCP, plan and mixed labels without guessing',()=>{assert.equal(v.classify('TREATMENT REFLECTED CEILING PLAN'),'rcp');assert.equal(v.classify('TREATMENT FLOOR PLAN'),'plan');assert.equal(v.classify('PLAN'),'unknown');assert.equal(v.classify('SECTION AND DETAIL'),'unknown')});
 test('bounds and resource limits reject invalid input',()=>{assert.throws(()=>v.propose([[1],[1,0]],source));assert.throws(()=>v.propose(raster(),{...source,page:0}));const p=v.propose(raster(),source);assert.equal(v.associate(p.regions,[{bbox:{x:-1,y:3,width:10,height:2}}],source)[0].status,'unassigned')});
+test('recognizes separate contained plan and elevation titles without changing geometry eligibility',()=>{
+ const findings=[{id:'p',text:'TREATMENT FLOOR PLAN',bbox:{x:30,y:30,width:100,height:10}},{id:'e',text:'TREATMENT ELEVATION',bbox:{x:240,y:30,width:100,height:10}}];
+ const before=JSON.stringify(findings),r=v.analyze(raster(),findings,source);
+ assert.deepEqual(r.regions.map(x=>x.type),['plan','elevation']);assert.equal(r.geometry_ready,false);assert.equal(r.regions[0].title_evidence[0].finding_id,'p');assert.equal(JSON.stringify(findings),before);
+});
+test('references, outside labels and multiple same-type titles do not select a view',()=>{
+ for(const text of ['SEE FLOOR PLAN','REFER TO SECTION 2','AS SHOWN ON ELEVATION','DIMENSIONS PER FLOOR PLAN'])assert.equal(v.titleType(text),'unknown');
+ const findings=[{id:'a',text:'FLOOR PLAN',bbox:{x:30,y:30,width:90,height:10}},{id:'b',text:'FLOOR PLAN',bbox:{x:30,y:60,width:90,height:10}},{id:'c',text:'SECTION',bbox:{x:180,y:30,width:20,height:10}}];
+ const r=v.analyze(raster(),findings,source);assert.equal(r.regions[0].type,'unknown');assert.equal(r.regions[0].title_evidence.length,2);assert.equal(r.assignments[2].status,'unassigned');
+});
+test('actual automatic worker produces diagnostic view evidence on raster fallback',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');let result,closed=false;
+ const context=vm.createContext({self:null,postMessage:r=>{result=r},close:()=>{closed=true}});context.self=context;
+ context.importScripts=(...files)=>{for(const f of files)vm.runInContext(fs.readFileSync(path.join(__dirname,'..',f),'utf8'),context)};
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../automatic-room-worker.js'),'utf8'),context);
+ await context.onmessage({data:{rows:raster(),source,findings:[{id:'label',text:'FLOOR PLAN',bbox:{x:30,y:30,width:100,height:10}}]}});
+ assert.equal(result.error,undefined);assert.equal(result.viewAnalysis.regions[0].type,'plan');assert.equal(result.viewAnalysis.geometry_ready,false);assert(closed);
+});

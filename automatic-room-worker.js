@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./dimension-evidence.js','./wall-proposals.js');
+importScripts('./dimension-evidence.js','./wall-proposals.js','./drawing-view-regions.js');
 self.onmessage=async({data})=>{
  let image,canvas;
  try{
@@ -17,11 +17,12 @@ self.onmessage=async({data})=>{
     const i=(y*size.width+x)*4;return .299*pixels[i]+.587*pixels[i+1]+.114*pixels[i+2]<150?1:0;
    }));
   }
+  const viewAnalysis=self.ConstructionDrawingViews.analyze(rows,findings,source);
   const report=self.ConstructionWallCandidates.detectWallCandidates(rows,{maxSeparation:65});
   // A truncated proposal set cannot prove there is only one room.
-  if(report.stats.possiblePairs>36){self.postMessage({findings:[],candidates:[],limited:true});return}
+  if(report.stats.possiblePairs>36){self.postMessage({findings:[],candidates:[],limited:true,viewAnalysis});return}
   const sx=source.width_px/rows[0].length,sy=source.height_px/rows.length;
-  self.postMessage({findings:core.enrich(findings,rows,source),candidates:report.candidates.map(c=>({...c,
+  self.postMessage({viewAnalysis,findings:core.enrich(findings,rows,source),candidates:report.candidates.map(c=>({...c,
    points_px:c.points_px.map(p=>[p[0]*sx,p[1]*sy]),apparent_width_px:c.apparent_width_px*(c.axis==='h'?sy:sx)}))});
  }catch(e){self.postMessage({error:e.message||'Automatic room analysis failed'})}
  finally{image?.close();if(canvas)canvas.width=canvas.height=0;self.close()}

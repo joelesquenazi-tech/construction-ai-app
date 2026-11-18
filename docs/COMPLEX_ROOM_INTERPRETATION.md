@@ -81,3 +81,9 @@ Added `drawing-view-regions.js`, an isolated bounded whitespace-region proposal 
 Six new unit tests pass; full unit suite: 182 passed. Includes transformed coordinates, neighboring views, crossing dimensions, overlapping assignments, revisions, blank/connected sheets and bounds. These are synthetic tests only.
 
 Not connected to production reconstruction yet. Whitespace can split a single view or merge several, especially with sheet borders, dimensions or title blocks. Outputs are proposals, never verified view boundaries. Next: combine raster regions with title/reference evidence and evaluate real sheet ownership before feeding cropped views to wall detection. No new automatic wall tracing or live deployment is claimed by this checkpoint.
+
+## CR-1 development checkpoint — title evidence and worker integration
+
+The automatic-room worker now runs region proposals and contained-title analysis, returning `viewAnalysis` with source-linked title boxes, candidate types, evidence assignments and ambiguity explanations. The offline shell includes the new dependency. Exact title-shaped labels are used; common prose references are excluded. Multiple titles, including two of the same type, leave a region unknown. Detached titles are not assigned by nearest-neighbor guessing.
+
+Verification: 185 unit tests pass, including execution of the actual worker with raster fallback, source transforms, references, overlapping assignments, detached labels and multiple titles. The existing rectangular reconstruction still uses its prior checks. View analysis is diagnostic and explicitly `geometry_ready: false`; it does not authorize crop-based geometry. Browser/device testing and real sheet view-boundary accuracy remain open. Next: reconcile detached title strips and graphic regions using additional layout evidence, then test safe cropped wall detection against independently defined regions.
