@@ -137,4 +137,14 @@ window.constructionAIGetDrawingSource=async sheetId=>{
   filename:original.name||metadata.name||'drawing',revision:metadata.revision??null};
 };
 window.constructionAIWaitForDrawingSave=()=>pendingSave;
+window.constructionAIGetVisionSource=async()=>{
+ const item=sheets.find(x=>x.id===active&&projects().belongs(x));
+ if(!item)return null;
+ const metadata=structuredClone(item),id=active;
+ let blob=await transaction('readonly',store=>store.get(id));
+ if(!blob)return null;
+ if(window.constructionAIPdf.isPdf(blob))blob=(await window.constructionAIPdf.prepare(blob,'1'))[0].blob;
+ if(active!==id||!projects().belongs(metadata)||JSON.stringify(sheets.find(x=>x.id===id))!==JSON.stringify(metadata))throw Error('Drawing changed while loading. Load it again.');
+ return {metadata,blob};
+};
 })();
